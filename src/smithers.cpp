@@ -29,47 +29,63 @@ std::string gen_random(const size_t len) {
     for (size_t i = 0; i < len; ++i) {
         s[i] = alphanum[gen() % (sizeof(alphanum) - 1)];
     }
+    s[len] = 0; // null
     
-    s[len] = 0;
-    std::string randy(s);
-    return randy;
+    return std::string(s);
+}
+
+void log_request(const m2pp::request& req) {
+    std::ostringstream log_request;
+
+    log_request << "<pre>" << std::endl;
+    log_request << "SENDER: " << req.sender << std::endl;
+    log_request << "IDENT: " << req.conn_id << std::endl;
+    log_request << "PATH: " << req.path << std::endl;
+    log_request << "BODY: " << req.body << std::endl;
+    
+    for (std::vector<m2pp::header>::const_iterator it=req.headers.cbegin();it!=req.headers.cend();it++) {
+        log_request << "HEADER: " << it->first << ": " << it->second << std::endl;
+    }
+
+    log_request << "</pre>" << std::endl;
+
+    std::cout << log_request.str();
 }
 
 } // close anon namespace
 
 namespace smithers{
 
+Smithers::Smithers():
+    m_zmq_context(1),
+    m_publisher(m_zmq_context, ZMQ_PUB)
+    {
+
+    m_publisher.bind("tcp://127.0.0.1:9950");
+    
+}
+
 
 void Smithers::await_registered_players(const int max_players){
     std::cout << "await_registered_players().." << std::endl;
 
-    for (int i=0; i<max_players; ++i){
-        m2pp::connection conn("YOYOYO", "tcp://127.0.0.1:9997", "tcp://127.0.0.1:9996");
+    m2pp::connection conn("UUID_1", "tcp://127.0.0.1:9997", "tcp://127.0.0.1:9996");
+    
+    int seat = 1;
+    while (true){
         m2pp::request req = conn.recv();
 
         if (req.disconnect) {
             std::cout << "== disconnect ==" << std::endl;
-            --i;
             continue;
         }
 
-        std::ostringstream log_request;
-        log_request << "<pre>" << std::endl;
-        log_request << "SENDER: " << req.sender << std::endl;
-        log_request << "IDENT: " << req.conn_id << std::endl;
-        log_request << "PATH: " << req.path << std::endl;
-        log_request << "BODY: " << req.body << std::endl;
-        for (std::vector<m2pp::header>::iterator it=req.headers.begin();it!=req.headers.end();it++) {
-            log_request << "HEADER: " << it->first << ": " << it->second << std::endl;
-        }
-        log_request << "</pre>" << std::endl;
-
-        std::cout << log_request.str();
+        log_request(req);
 
         std::ostringstream name;
-        name << "Player" << i;
+        name << "Player" << seat;
         
-        Player new_player(name.str(), gen_random(20), i);
+        Player new_player(name.str(), gen_random(20), seat);
         
         std::ostringstream player_info;
         player_info << "{ "
@@ -80,20 +96,27 @@ void Smithers::await_registered_players(const int max_players){
 
         conn.reply_http(req, player_info.str());
         m_players.push_back(new_player);
+        if (seat < max_players){
+            seat++;
+        } else {
+            break;
+        }
+
     }
 
 }
 
-void Smithers::publish_to_all(const std::string& message) const{
+void Smithers::publish_to_all(const std::string& message){
     std::cout << "publish_to_all " << message << std::endl;
     // implement sending out zmq messages and also websockets
-    zmq::context_t context (1);
-    zmq::socket_t publisher (context, ZMQ_PUB);
-    publisher.bind("tcp://127.0.0.1:9950");
+    // zmq::context_t context (1);
+    // zmq::socket_t publisher (context, ZMQ_PUB);
+
+    // publisher.bind("tcp://127.0.0.1:9950");
 
     while (true){   
         zmq::message_t zmq_message(message.begin(), message.end());
-        publisher.send(zmq_message);
+        m_publisher.send(zmq_message);
     }
 }
 
@@ -104,7 +127,8 @@ void Smithers::play_game(){
 
 
 void Smithers::print_players(){
+
     publish_to_all("You're all watching the game");
     
-};
+}
 } // smithers namespace

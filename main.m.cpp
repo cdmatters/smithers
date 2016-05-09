@@ -18,7 +18,7 @@ int main(int argc, char *argv[]) {
     }
 
     smithers::Smithers x;
-    x.await_registered_players(3);
+    x.await_registered_players(2);
 
     std::string y;
     std::cout << "..continue?" << std::endl;
