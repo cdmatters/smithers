@@ -1,0 +1,73 @@
+import requests
+import zmq
+
+from  mongrel2.handler import Connection 
+import time
+
+
+
+def register_me():
+    r = requests.post( 'http://localhost:6767/register/', data={'name':'keen2play'} )
+    print r.json()
+
+
+def subscribe_me():
+
+    port = "9950"
+    context = zmq.Context()
+    socket = context.socket(zmq.SUB)
+
+    print "Collecting updates from weather server..."
+    socket.connect ("tcp://127.0.0.1:%s" % port)
+    socket.setsockopt(zmq.SUBSCRIBE, '')
+
+    total_value = 0
+    for update_nbr in range (5):
+        string = socket.recv()
+        print string
+        messagedata = string.split()
+        print  messagedata
+
+
+def main():
+    register_me()
+    subscribe_me()
+
+    # sender_id = "82209006-86FF-4982-B5EA-D1E29E55D481"
+    # conn = Connection(sender_id,'tcp://127.0.0.1:9999','tcp://127.0.0.1:9998')
+
+    # print '...connected'
+    # while True:
+    #     req = conn.recv()
+       
+    #     if req.is_disconnect:
+    #         print '== disconnect =='
+        
+    #     if req.body != '{"type":"disconnect"}':
+    #         print dir(req.headers), req.headers, req.conn_id
+    #         resp = []
+    #         resp.append("<pre> %s")
+    #         resp.append("SENDER: %s " % req.sender )
+    #         resp.append("IDENT: %s " % req.conn_id )
+    #         resp.append("PATH: %s " % req.path )
+    #         resp.append("BODY: %s " % req.body )
+    #         resp.append("/<pre> %s\n")
+
+    #         response = ''.join(resp)
+    #         for i in xrange(10):
+    #             str(i)
+
+    #             conn.reply_websocket(req, response)
+    #             conn.reply_websocket(req, '<pre>%s</pre>\n'%i)
+    #             time.sleep(1)
+            
+    #         conn.close(req)
+    #         print response
+
+
+
+if __name__ =='__main__':
+    main()
+
+
+
