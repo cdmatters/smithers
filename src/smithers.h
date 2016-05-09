@@ -9,6 +9,9 @@
 
 
 namespace smithers{
+    typedef std::vector<Player>::iterator players_it_t;
+    typedef std::vector<Player>::const_iterator players_cit_t;
+
     
     class Smithers{
     

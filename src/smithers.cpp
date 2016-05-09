@@ -1,14 +1,14 @@
 #include "smithers.h"
 
+#include "game.h"
+
+#include <zmq.hpp>
+#include <m2pp.hpp>
+
 #include <iostream>
 #include <sstream>
-#include <m2pp.hpp>
 #include <random>
-#include <zmq.hpp>
-#include <zmq.hpp>
-#include <stdio.h>
-#include <stdlib.h>
-#include <time.h>
+
 
 #if (defined (WIN32))
 #include <zhelpers.hpp>
@@ -58,11 +58,9 @@ namespace smithers{
 
 Smithers::Smithers():
     m_zmq_context(1),
-    m_publisher(m_zmq_context, ZMQ_PUB)
-    {
-
-    m_publisher.bind("tcp://127.0.0.1:9950");
-    
+    m_publisher(m_zmq_context, ZMQ_PUB){
+        m_publisher.bind("tcp://127.0.0.1:9950");
+        publish_to_all("I'm alive");
 }
 
 
@@ -107,17 +105,9 @@ void Smithers::await_registered_players(const int max_players){
 }
 
 void Smithers::publish_to_all(const std::string& message){
-    std::cout << "publish_to_all " << message << std::endl;
-    // implement sending out zmq messages and also websockets
-    // zmq::context_t context (1);
-    // zmq::socket_t publisher (context, ZMQ_PUB);
-
-    // publisher.bind("tcp://127.0.0.1:9950");
-
-    while (true){   
-        zmq::message_t zmq_message(message.begin(), message.end());
-        m_publisher.send(zmq_message);
-    }
+    std::cout << "ALL: " << message << std::endl;
+    zmq::message_t zmq_message(message.begin(), message.end());
+    m_publisher.send(zmq_message);
 }
 
 void Smithers::play_game(){
@@ -127,8 +117,21 @@ void Smithers::play_game(){
 
 
 void Smithers::print_players(){
+    std::ostringstream message;
+    message << '[';
+    for (players_cit_t it = m_players.cbegin();
+        it !=  m_players.cend();
+        it++)
+    {
+        message << '{'
+         << "\"name\":\"" << it->m_name <<"\", "
+         << "\"seat\":\"" << it->m_seat <<"\", "
+         << "\"chips\":\"" << it->m_chips <<"\" "
+         << "},";
 
-    publish_to_all("You're all watching the game");
+    }
+    message << "]" << std::endl;
+    publish_to_all(message.str());
     
 }
 } // smithers namespace
