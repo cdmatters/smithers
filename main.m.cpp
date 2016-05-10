@@ -19,14 +19,15 @@ int main(int argc, char *argv[]) {
 
     smithers::Smithers waylon_smithers;
 
-    waylon_smithers.await_registered_players(2);
+    waylon_smithers.await_registered_players(3);
 
     std::string start_input;
     std::cout << "..continue?" << std::endl;
     std::cin >> start_input;
 
 //    waylon_smithers.print_players();
-    for (int i=0; i<100; i++){
+
+    for (int i=0; i<5; i++){
         waylon_smithers.play_game();
         std::cout<<"---"<<std::endl;
     }

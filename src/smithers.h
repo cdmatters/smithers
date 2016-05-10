@@ -52,6 +52,12 @@ namespace smithers{
 
         std::vector<Player> m_players;
 
+        
+        int get_dealer();
+        void reset_and_move_dealer_to_next_player();
+        int get_next_to_play(int i);
+
+
         zmq::context_t m_zmq_context;
         zmq::socket_t m_publisher;
 

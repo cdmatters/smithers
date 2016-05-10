@@ -7,6 +7,7 @@
 #include <iostream>
 #include <sstream>
 #include <random>
+#include <algorithm> 
 
 
 // #if (defined (WIN32))
@@ -49,6 +50,10 @@ void log_request(const m2pp::request& req) {
     log_request << "</pre>" << std::endl;
 
     std::cout << log_request.str();
+}
+
+bool is_dealer(const smithers::Player& p){
+    return p.m_is_dealer;
 }
 
 } // close anon namespace
@@ -99,6 +104,7 @@ void Smithers::await_registered_players(const int max_players){
         }
 
     }
+    m_players[0].m_is_dealer = true;
 
 }
 
@@ -123,28 +129,30 @@ void Smithers::play_game(){
     // add blinds, set dealer
     publish_to_all(dealt_hands);
 
-    play_betting_round(0);
+    play_betting_round(3);
 
     new_game.deal_flop();
     Json::Value flop = create_table_cards_message(new_game.get_table());
     // add pot
     publish_to_all(flop);
 
-    play_betting_round(0);
+    play_betting_round(1);
 
     new_game.deal_river();
     Json::Value river = create_table_cards_message(new_game.get_table());
     // add pot
     publish_to_all(river);
 
-    play_betting_round(0);
+    play_betting_round(1);
     
     new_game.deal_turn();
     Json::Value turn = create_table_cards_message(new_game.get_table());
     // add pot
     publish_to_all(turn);
 
-    play_betting_round(0);
+    play_betting_round(1);
+
+    reset_and_move_dealer_to_next_player();
 
 }
 
@@ -195,6 +203,7 @@ Json::Value Smithers::create_move_request(const std::string& name){
     Json::Value root;
     root["type"] = "MOVE_REQUEST";
     root["pot"] = 0;
+    root["name"] = name;
 
     return root;
 }
@@ -217,26 +226,56 @@ void Smithers::listen_and_pull_from_queue(){
 
 }
 
-void Smithers::play_betting_round(int first_to_play){
-    std::string last_raise = ""; 
-    std::string to_move = m_players[first_to_play].m_name;
+int Smithers::get_dealer(){
+    std::vector<Player>::iterator it = std::find_if(m_players.begin(), m_players.end(), is_dealer);
+    return it - m_players.begin(); 
+}
 
-    publish_to_all(create_move_request("Player"));
-    listen_and_pull_from_queue();
+int Smithers::get_next_to_play(int seat){
+    int next = (seat + 1) % m_players.size();
+    if (m_players[next].m_in_play && m_players[next].m_in_play_this_round){
+        return next;
+    }
+    else {
+        return get_next_to_play(next);
+    }
+}
+
+void Smithers::reset_and_move_dealer_to_next_player(){
+    int dealer = get_dealer();
+    for (size_t i=0; i<m_players.size(); ++i){
+        m_players[i].m_in_play_this_round = true;
+    }
+    int next_dealer = get_next_to_play(dealer);
+
+    std::cout<< "OLD DEALER: " << dealer << " "<< m_players[dealer].m_name<<std::endl;
+    std::cout<< "NEW DEALER: " << next_dealer << " " <<m_players[next_dealer].m_name<<std::endl;
+    m_players[dealer].m_is_dealer = false;
+    m_players[next_dealer].m_is_dealer = true;
+
+};
+
+void Smithers::play_betting_round(int first_to_bet){
+    int to_play_index = get_dealer();
+    for (int i=0; i<first_to_bet; i++){
+        to_play_index = get_next_to_play(to_play_index);
+    }
 
 
-
-        // send_move_request(to_move);
-        // Json::Value raw_move = listen_and_pull_from_queue(to_move);
-        // Json::Value processed_move = verify_and_process_move(raw_move);
-        // if (is_raise(processed_move)){
-        //     last_raise = to_move;
-        // } else if (is_fold(processed_move)){
-        //     //fold character
-        // }
-        // publish_move(move);
+    std::string to_play_name = m_players[to_play_index].m_name;
+    std::string last_raise = to_play_name; //first name, in case of all checks 
     
-    //return if all folded or not;
+    do {
+
+        publish_to_all(create_move_request(to_play_name));
+        listen_and_pull_from_queue();
+        //process and send out message;
+        if (false){
+            last_raise = to_play_name; // will no always be the case
+        }
+        to_play_index = get_next_to_play(to_play_index);
+        to_play_name =  m_players[to_play_index].m_name;
+    } while (last_raise != to_play_name);
 }
 
 

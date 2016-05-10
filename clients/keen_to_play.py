@@ -4,13 +4,14 @@ import zmq
 #from  mongrel2.handler import Connection 
 import time
 import json
+import sys
 
 
-def register_me():
-    r = requests.post( 'http://localhost:6767/register/', data={'name':'keen2play'} )
+def register_me(name):
+    r = requests.post( 'http://localhost:6767/register/', data={'name':name} )
     print r.json()
 
-def subscribe_me():
+def subscribe_me(name):
 
     port = "9950"
     context = zmq.Context()
@@ -27,15 +28,16 @@ def subscribe_me():
         json_message = json.loads(message);
         print json_message
 
-        if json_message["type"]=='MOVE_REQUEST':
+        if json_message["type"]=='MOVE_REQUEST' and json_message["name"]==name:
             print "posting message"
-            r = requests.post( 'http://localhost:6767/move/', data={'move':'raise'} )
+            r = requests.post( 'http://localhost:6767/move/', data={'move':'raise', 'name':name} )
 
 
 
 def main():
-    register_me()
-    subscribe_me()
+    name = sys.argv[1]
+    register_me(name)
+    subscribe_me(name)
 
     # sender_id = "82209006-86FF-4982-B5EA-D1E29E55D481"
     # conn = Connection(sender_id,'tcp://127.0.0.1:9999','tcp://127.0.0.1:9998')
