@@ -16,26 +16,30 @@ namespace smithers{
 const char Card::S[] = {"CDHS"};
 const char Card::R[] = {"23456789TJQKA"};
 
-std::ostream& operator<<(std::ostream& stream, const Card& card){
+std::ostream& operator<<(std::ostream& stream, const Card& card)
+{
     stream << Card::R[card.rank] << Card::S[card.suit];
     return stream;
 }
 
-std::ostream& operator<<(std::ostream& stream, const Hand& hand){
+std::ostream& operator<<(std::ostream& stream, const Hand& hand)
+{
     stream << "|"  << hand.card1 << " " << hand.card2 << "|" 
            << "p " << hand.in_play << "|"
            << "d " << hand.is_dealer << "|";
     return stream;
 }
 
-Json::Value& operator<<(Json::Value& j_val, const Hand& hand){
+Json::Value& operator<<(Json::Value& j_val, const Hand& hand)
+{
     std::ostringstream _;
     _ << hand;
     j_val = _.str();
     return j_val;
 };
 
-Json::Value& operator<<(Json::Value& j_val, const Card& card){
+Json::Value& operator<<(Json::Value& j_val, const Card& card)
+{
     std::ostringstream _;
     _ << card;
     j_val = _.str();
@@ -43,12 +47,14 @@ Json::Value& operator<<(Json::Value& j_val, const Card& card){
 };
 
 
-Game::Game(){
+Game::Game()
+{
     build_deck();
 }
 
 
-const std::vector<Hand>& Game::deal_hands(int number_of_players ){
+const std::vector<Hand>& Game::deal_hands(int number_of_players )
+{
     std::vector<Card> all_cards;
     for (int i=0; i< 2*number_of_players; i++){
         all_cards.push_back(deal_a_card());
@@ -62,7 +68,8 @@ const std::vector<Hand>& Game::deal_hands(int number_of_players ){
     return m_hands;    
 }
 
-std::vector<Card> Game::deal_flop(){
+std::vector<Card> Game::deal_flop()
+{
     std::vector<Card> flop;
     burn_card(deal_a_card()); // burn 
     for (int i=0; i<3; i++){ // and turn 
@@ -73,7 +80,8 @@ std::vector<Card> Game::deal_flop(){
     return flop;
 }
 
-Card Game::deal_river(){
+Card Game::deal_river()
+{
 
     burn_card(deal_a_card()); // burn 
     Card c = deal_a_card(); // and turn 
@@ -81,15 +89,18 @@ Card Game::deal_river(){
 
     return c;
 }
-Card Game::deal_turn(){
+Card Game::deal_turn()
+{
     return deal_river(); // code duplication is evil
 }
 
-const std::vector<Card>& Game::get_table(){
+const std::vector<Card>& Game::get_table()
+{
     return m_table;
 };
 
-const std::string Game::get_table_str(){
+const std::string Game::get_table_str()
+{
     std::ostringstream t;
     t << "| ";
     for (size_t i=0; i<m_table.size(); i++){
@@ -99,18 +110,21 @@ const std::string Game::get_table_str(){
     return t.str();
 }
 
-void Game::burn_card(const Card c){
+void Game::burn_card(const Card c)
+{
     m_burnt.push_back(c);
 }
 
-void Game::build_deck(){
+void Game::build_deck()
+{
     for (int i=0; i<52; ++i){
         const Card card = {(int) i/4, i % 4 }; 
         m_deck.push_back(card); 
     }
 }
 
-const Card Game::deal_a_card(){
+const Card Game::deal_a_card()
+{
     std::random_device gen;
     std::uniform_int_distribution<> dis(0, m_deck.size()-1);
 

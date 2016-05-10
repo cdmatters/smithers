@@ -23,7 +23,7 @@ namespace smithers{
     public:
         Smithers();
 
-        void await_registered_players(const int max_players);
+        void await_registered_players(int max_players, int max_chips );
         void play_game();
         
         void publish_to_all(const std::string& message);
@@ -44,11 +44,12 @@ namespace smithers{
             TABLE_CARDS, 
             RESULTS,
         };
+
     private:
 
-        void play_betting_round(int first_to_play);
-
-        void listen_and_pull_from_queue();
+        void play_betting_round(int first_to_play, int min_raise, int last_bet);
+        Json::Value listen_and_pull_from_queue(const std::string& player_name);
+        bool process_move(const Json::Value& move, Player&, int& min_raise, int& last_bet, int& pot );
 
         std::vector<Player> m_players;
 

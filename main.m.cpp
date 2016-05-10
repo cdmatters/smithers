@@ -7,7 +7,8 @@
 #include <thread>
 #include <chrono>
 
-int main(int argc, char *argv[]) {
+int main(int argc, char *argv[]) 
+{
     std::string sender_id = "82209006-86FF-4982-B5EA-D1E29E55D481";
 
     if (argc != 3) {
@@ -19,7 +20,7 @@ int main(int argc, char *argv[]) {
 
     smithers::Smithers waylon_smithers;
 
-    waylon_smithers.await_registered_players(3);
+    waylon_smithers.await_registered_players(3, 10000);
 
     std::string start_input;
     std::cout << "..continue?" << std::endl;
