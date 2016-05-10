@@ -1,18 +1,17 @@
 #include "smithers.h"
 
-#include "game.h"
-
 #include <zmq.hpp>
 #include <m2pp.hpp>
+#include <json/json.h>
 
 #include <iostream>
 #include <sstream>
 #include <random>
 
 
-#if (defined (WIN32))
-#include <zhelpers.hpp>
-#endif
+// #if (defined (WIN32))
+// #include <zhelpers.hpp>
+// #endif
 
 
 namespace {
@@ -60,7 +59,6 @@ Smithers::Smithers():
     m_zmq_context(1),
     m_publisher(m_zmq_context, ZMQ_PUB){
         m_publisher.bind("tcp://127.0.0.1:9950");
-        publish_to_all("I'm alive");
 }
 
 
@@ -110,10 +108,97 @@ void Smithers::publish_to_all(const std::string& message){
     m_publisher.send(zmq_message);
 }
 
-void Smithers::play_game(){
-    std::cout << "play_game" << std::endl;
+void Smithers::publish_to_all(const Json::Value& json){
+    std::ostringstream message;
+    message << json;
+    publish_to_all(message.str());
 }
 
+void Smithers::play_game(){
+    std::cout << "play_game" << std::endl;
+    
+    Game new_game;
+    std::vector<Hand> hands = new_game.deal_hands(m_players.size()); // need to eject players
+    Json::Value dealt_hands = create_dealt_hands_message(hands);
+    // add blinds, set dealer
+    publish_to_all(dealt_hands);
+
+    new_game.deal_flop();
+    Json::Value flop = create_table_cards_message(new_game.get_table());
+    // add pot
+    publish_to_all(flop);
+
+    new_game.deal_river();
+    Json::Value river = create_table_cards_message(new_game.get_table());
+    // add pot
+    publish_to_all(river);
+    
+    new_game.deal_turn();
+    Json::Value turn = create_table_cards_message(new_game.get_table());
+    // add pot
+    publish_to_all(turn);
+
+}
+
+Json::Value Smithers::create_dealt_hands_message(const std::vector<Hand>& hands){
+    
+    Json::Value players(Json::arrayValue);
+    for (size_t i=0; i<m_players.size(); ++i){
+        if (!m_players[i].m_in_play){
+            continue;
+        }
+        Json::Value player;
+        player["name"] = m_players[i].m_name;
+        player["chips"] = m_players[i].m_chips;
+        player["hand"] << hands[i];
+
+        players.append(player);
+        
+    }
+
+    Json::Value root;
+    root["type"] = "DEALT_HANDS";
+    root["pot"] = 0;
+    root["players"] = players;
+
+    return root;
+}
+
+Json::Value Smithers::create_table_cards_message(const std::vector<Card>& cards){
+    Json::Value card_vector(Json::arrayValue);
+    for (std::vector<Card>::const_iterator c_it = cards.cbegin();
+        c_it != cards.cend();
+        c_it++){
+        // ugly
+        std::ostringstream c;
+        c << *c_it;
+        card_vector.append(c.str());
+    } 
+
+    Json::Value root;
+    root["type"] = "DEALT_HANDS";
+    root["pot"] = 0;
+    root["cards"] = card_vector;
+
+    return root;
+}
+
+void Smithers::play_betting_round(int first_to_play){
+    std::string last_raise = ""; 
+    std::string to_move = m_players[first_to_play].m_name;
+    while (last_raise != to_move){
+        // send_move_request(to_move);
+        // Json::Value raw_move = listen_and_pull_from_queue(to_move);
+        // Json::Value processed_move = verify_and_process_move(raw_move);
+        // if (is_raise(processed_move)){
+        //     last_raise = to_move;
+        // } else if (is_fold(processed_move)){
+        //     //fold character
+        // }
+        // publish_move(move);
+    }
+    //return if all folded or not;
+}
 
 
 void Smithers::print_players(){
@@ -132,6 +217,5 @@ void Smithers::print_players(){
     }
     message << "]" << std::endl;
     publish_to_all(message.str());
-    
 }
 } // smithers namespace

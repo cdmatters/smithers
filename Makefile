@@ -15,9 +15,9 @@ all: main.m.cpp  $(OBJ_FILES)
 	$(CXX) -o $(BOTBATTLE).tsk $(CXXFLAGS) $(LIBDIRS) $(INCDIRS)  $(LIBS) $^
 
 obj/%.o: src/%.cpp
-	$(CXX) $(CXXFLAGS) $(INCDIRS) -o $@ -c $<
+	$(CXX) $(CXXFLAGS) $(INCDIRS)  -o $@ -c $<
 
 clean:
-	$(RM) $(BOTBATTLE).tsk $(BOTBATTLE).o 
+	$(RM) $(BOTBATTLE).tsk $(BOTBATTLE).o  obj/*.o obj/*.d
 
 -include $(OBJFILES:.o=.d)

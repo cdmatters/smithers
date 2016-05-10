@@ -17,14 +17,20 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    smithers::Smithers x;
-    x.await_registered_players(2);
+    smithers::Smithers waylon_smithers;
 
-    std::string y;
+    waylon_smithers.await_registered_players(2);
+
+    std::string start_input;
     std::cout << "..continue?" << std::endl;
-    std::cin >> y;
+    std::cin >> start_input;
 
-    x.print_players();
+    waylon_smithers.print_players();
+    for (int i=0; i<100; i++){
+        waylon_smithers.play_game();
+        std::cout<<"---"<<std::endl;
+    }
+
 
     m2pp::connection conn(sender_id, argv[1], argv[2]);
 
