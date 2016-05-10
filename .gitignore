@@ -1,0 +1,22 @@
+# mongrel generated
+config.sqlite
+*.pid
+
+# log directory
+logs/
+
+# object directory
+obj/
+
+# external include director
+external/
+
+# build 
+*.d
+*.tsk
+
+# ignored source (external)
+src/jsoncpp.cpp
+
+# python venv
+clients/venv/
