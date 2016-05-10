@@ -8,10 +8,13 @@ import sys
 
 
 def register_me(name):
-    r = requests.post( 'http://localhost:6767/register/', data={'name':name} )
+    data = {"name":name}
+    r = requests.post( 'http://localhost:6767/register/', json=data )
     print r.json()
 
 def subscribe_me(name):
+    move = sys.argv[2]
+    amount = int(sys.argv[3])
 
     port = "9950"
     context = zmq.Context()
@@ -30,7 +33,8 @@ def subscribe_me(name):
 
         if json_message["type"]=='MOVE_REQUEST' and json_message["name"]==name:
             print "posting message"
-            r = requests.post( 'http://localhost:6767/move/', data={'move':'raise', 'name':name} )
+            next_move = {'name':name, 'move':move, 'chips':amount}
+            r = requests.post( 'http://localhost:6767/move/', json=next_move )
 
 
 
