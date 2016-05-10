@@ -25,7 +25,7 @@ int main(int argc, char *argv[]) {
     std::cout << "..continue?" << std::endl;
     std::cin >> start_input;
 
-    waylon_smithers.print_players();
+//    waylon_smithers.print_players();
     for (int i=0; i<100; i++){
         waylon_smithers.play_game();
         std::cout<<"---"<<std::endl;

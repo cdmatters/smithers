@@ -1,0 +1,7 @@
+nose==1.3.7
+pyrepl==0.8.4
+pyzmq==15.2.0
+simplejson==3.8.2
+storm==0.20
+wsgiref==0.1.2
+zmq==0.0.0

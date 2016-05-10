@@ -123,20 +123,28 @@ void Smithers::play_game(){
     // add blinds, set dealer
     publish_to_all(dealt_hands);
 
+    play_betting_round(0);
+
     new_game.deal_flop();
     Json::Value flop = create_table_cards_message(new_game.get_table());
     // add pot
     publish_to_all(flop);
 
+    play_betting_round(0);
+
     new_game.deal_river();
     Json::Value river = create_table_cards_message(new_game.get_table());
     // add pot
     publish_to_all(river);
+
+    play_betting_round(0);
     
     new_game.deal_turn();
     Json::Value turn = create_table_cards_message(new_game.get_table());
     // add pot
     publish_to_all(turn);
+
+    play_betting_round(0);
 
 }
 
@@ -183,10 +191,41 @@ Json::Value Smithers::create_table_cards_message(const std::vector<Card>& cards)
     return root;
 }
 
+Json::Value Smithers::create_move_request(const std::string& name){
+    Json::Value root;
+    root["type"] = "MOVE_REQUEST";
+    root["pot"] = 0;
+
+    return root;
+}
+
+void Smithers::listen_and_pull_from_queue(){
+    m2pp::connection conn("ID", "tcp://127.0.0.1:9900", "tcp://127.0.0.1:9901");
+    while (true){
+        m2pp::request req = conn.recv();
+
+
+        if (req.disconnect) {
+            std::cout << "== disconnect ==" << std::endl;
+            continue;
+        } else {
+            std::cout << req.body << std::endl;
+            conn.reply_http(req, "VALID");
+            break;
+        }
+    }
+
+}
+
 void Smithers::play_betting_round(int first_to_play){
     std::string last_raise = ""; 
     std::string to_move = m_players[first_to_play].m_name;
-    while (last_raise != to_move){
+
+    publish_to_all(create_move_request("Player"));
+    listen_and_pull_from_queue();
+
+
+
         // send_move_request(to_move);
         // Json::Value raw_move = listen_and_pull_from_queue(to_move);
         // Json::Value processed_move = verify_and_process_move(raw_move);
@@ -196,7 +235,7 @@ void Smithers::play_betting_round(int first_to_play){
         //     //fold character
         // }
         // publish_move(move);
-    }
+    
     //return if all folded or not;
 }
 
@@ -208,6 +247,7 @@ void Smithers::print_players(){
         it !=  m_players.cend();
         it++)
     {
+
         message << '{'
          << "\"name\":\"" << it->m_name <<"\", "
          << "\"seat\":\"" << it->m_seat <<"\", "

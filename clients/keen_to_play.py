@@ -1,15 +1,14 @@
 import requests
 import zmq
 
-from  mongrel2.handler import Connection 
+#from  mongrel2.handler import Connection 
 import time
-
+import json
 
 
 def register_me():
     r = requests.post( 'http://localhost:6767/register/', data={'name':'keen2play'} )
     print r.json()
-
 
 def subscribe_me():
 
@@ -22,11 +21,16 @@ def subscribe_me():
     socket.setsockopt(zmq.SUBSCRIBE, '')
 
     total_value = 0
-    for update_nbr in range (5):
-        string = socket.recv()
-        print string
-        messagedata = string.split()
-        print  messagedata
+    while True:
+        message = socket.recv()
+        print message
+        json_message = json.loads(message);
+        print json_message
+
+        if json_message["type"]=='MOVE_REQUEST':
+            print "posting message"
+            r = requests.post( 'http://localhost:6767/move/', data={'move':'raise'} )
+
 
 
 def main():
