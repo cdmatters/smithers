@@ -1,5 +1,5 @@
 CXX=g++
-CXXFLAGS=-Wall -Wextra -Ilib -MMD
+CXXFLAGS=-Wall -Wextra -Ilib -MMD -std=c++11
 LIBS=-lm2pp -lzmq -ljson 
 
 CPP_FILES:= $(wildcard src/*.cpp)
