@@ -40,7 +40,7 @@ class Game{
         const std::vector<Card>& get_table();
         const std::string get_table_str();
 
-        std::pair<int,Hand> mark_winning_hand(); //signiature?
+        int return_winning_hand(); //signiature?
         
 
     private:

@@ -136,6 +136,9 @@ const Card Game::deal_a_card()
     return this_card;
 }
 
+int Game::return_winning_hand(){
+    return 0;
+}
 
 
 
