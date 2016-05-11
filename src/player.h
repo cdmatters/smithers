@@ -28,7 +28,9 @@ inline Player::Player(const std::string& name, const std::string& hash_key, cons
     m_chips_this_game(0),
     m_chips_this_round(0),
     m_in_play(true),
-    m_in_play_this_round(true)
+    m_in_play_this_round(true),
+    m_all_in_this_round(false),
+    m_is_dealer(false)
     {};
 
 }

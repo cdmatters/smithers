@@ -65,8 +65,10 @@ class Smithers{
         int get_dealer();
         void reset_and_move_dealer_to_next_player();
         int get_next_to_play(int i);
+        int get_next_not_broke(int i);
         int get_pot_value_for_game();
         void put_betting_round_in_pot();
+        void award_winnings(const std::vector<ScoredFiveCardsPair_t>& scored_hands);
 
 
         zmq::context_t m_zmq_context;

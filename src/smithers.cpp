@@ -12,6 +12,15 @@
 
 namespace {
 
+typedef struct r {
+        int score;
+        std::string hand;
+        size_t player_index;
+        int winnings;
+    } Result_t;
+
+bool result_comparator(const Result_t& r1,const Result_t& r2 ){return r1.score>r2.score;}
+
 std::string gen_random(const size_t len)
 {
     char s[len];
@@ -187,8 +196,9 @@ void Smithers::play_game()
 
     play_betting_round(1, 100, 0, side_pots);
 
-    int winning_seats = new_game.return_winning_hand();
+    std::vector<ScoredFiveCardsPair_t> scored_hands = new_game.return_hand_scores();
 
+    award_winnings(scored_hands);
     reset_and_move_dealer_to_next_player();
 }
 
@@ -201,6 +211,52 @@ void Smithers::play_tournament()
     }
 
 }
+
+void Smithers::award_winnings(const std::vector<ScoredFiveCardsPair_t>& scored_hands)
+{
+    std::vector<Result_t> results;
+    int pot = 0;
+    for (size_t i=0; i<m_players.size(); i++){   
+        
+        pot += m_players[i].m_chips_this_game;
+        if (!m_players[i].m_in_play || !m_players[i].m_in_play_this_round)
+        {
+            continue;
+        }
+        int seat = m_players[i].m_seat;
+        std::ostringstream cards;
+        cards <<scored_hands[seat].second;
+        Result_t r = {scored_hands[seat].first,cards.str(), i, 0};
+        results.push_back(r);
+    }
+
+    std::sort(results.begin(), results.end(), result_comparator);
+
+    for (size_t r=0; r<results.size(); r++)
+    {
+        Player& winner = m_players[results[r].player_index];
+        int winners_bet = winner.m_chips_this_game;
+
+        for (size_t p=0; p<m_players.size(); p++){
+            int amount = (m_players[p].m_chips_this_game >= winners_bet) ? 
+                            winners_bet : m_players[p].m_chips_this_round;
+            results[r].winnings += amount;
+            m_players[p].m_chips_this_game -= amount;
+        }
+        
+        winner.m_chips += results[r].winnings;
+
+    }
+        
+    for  (size_t r=0; r<results.size(); r++){
+        std::cout<< results[r].score <<" "<< m_players[results[r].player_index].m_name << " "<< results[r].hand << " " << results[r].winnings <<std::endl;;
+    }
+    
+
+
+}
+
+
 
 Json::Value Smithers::create_dealt_hands_message(const std::vector<Hand>& hands)
 {
@@ -220,8 +276,8 @@ Json::Value Smithers::create_dealt_hands_message(const std::vector<Hand>& hands)
         m_players[deal_to_seat].m_seat = hand_number;
 
         Json::Value player;
-        player["name"] = m_players[i].m_name;
-        player["chips"] = m_players[i].m_chips;
+        player["name"] = m_players[deal_to_seat].m_name;
+        player["chips"] = m_players[deal_to_seat].m_chips;
         player["hand"] << hands[hand_number];
 
         players.append(player);
@@ -332,10 +388,11 @@ enum MoveType Smithers::process_move(const Json::Value& move, Player& player, in
     std::string this_move = move.get("move", "").asString();
     int this_bet = move.get("chips", "0").asInt();
 
-    if (this_bet + player.m_chips_this_game >= player.m_chips)
+    if (this_bet + player.m_chips_this_round >= player.m_chips)
     {
+        std::cout << "HERE" <<std::endl;
         player.m_chips_this_round = player.m_chips;
-        player.m_chips_this_game = player.m_chips;
+        player.m_chips_this_game += player.m_chips;
         return ALL_IN;
     }
 
@@ -368,8 +425,9 @@ enum MoveType Smithers::process_move(const Json::Value& move, Player& player, in
     {
         if (last_bet > player.m_chips) 
         {
+            std::cout << "THERE"<<  player.m_chips_this_round <<" "<< player.m_chips_this_game << " " << player.m_chips <<std::endl;
             player.m_chips_this_round = player.m_chips;
-            player.m_chips_this_game = player.m_chips;
+            player.m_chips_this_game += player.m_chips;
             return ALL_IN;
         }
         player.m_chips_this_round = last_bet;
@@ -502,6 +560,19 @@ int Smithers::get_next_to_play(int seat)
     }
 }
 
+int Smithers::get_next_not_broke(int seat)
+{
+    int next = (seat + 1) % m_players.size();
+    if (m_players[next].m_in_play)
+    {
+        return next;
+    }
+    else 
+    {
+        return get_next_not_broke(next);
+    }
+}
+
 void Smithers::reset_and_move_dealer_to_next_player()
 {
     int dealer = get_dealer();
@@ -516,4 +587,5 @@ void Smithers::reset_and_move_dealer_to_next_player()
     m_players[next_dealer].m_is_dealer = true;
 
 };
+
 } // smithers namespace

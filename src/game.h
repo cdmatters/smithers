@@ -6,6 +6,7 @@
 #include <json/json.h>
 
 #include "card.h"
+#include "hand_rank.h"
 
 namespace smithers{
 
@@ -22,7 +23,8 @@ class Game{
         const std::vector<Card>& get_table();
         const std::string get_table_str();
 
-        int return_winning_hand(); //signiature?
+        std::vector<ScoredFiveCardsPair_t> return_hand_scores();
+
         
 
     private:

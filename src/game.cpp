@@ -1,7 +1,5 @@
 #include "game.h"
 
-#include "hand_rank.h"
-
 #include <random>
 #include <iostream>
 #include <sstream>
@@ -106,11 +104,14 @@ const Card Game::deal_a_card()
 }
 
 
-int Game::return_winning_hand()
+std::vector<ScoredFiveCardsPair_t> Game::return_hand_scores()
 {
+    std::vector<ScoredFiveCardsPair_t> hand_scores;
     for (size_t i=0; i<m_hands.size(); i++)
     {
         ScoredFiveCardsPair_t scored_hand = rank_hand(m_table, m_hands[i]);
+        hand_scores.push_back(scored_hand);
+
         std::cout << scored_hand.first << " ";
         for (size_t j=0; j<5; j++){
             std::cout << scored_hand.second[j]<<" ";
@@ -118,7 +119,7 @@ int Game::return_winning_hand()
         std::cout<<std::endl;
         
     }
-    return 0;
+    return hand_scores;
 }
 
 

@@ -8,6 +8,16 @@
 
 namespace smithers{
 
+std::ostream& operator<<(std::ostream& stream, const FiveCards_t& fivecard)
+{
+    stream << fivecard[0] << " " 
+           << fivecard[1] << " " 
+           << fivecard[2] << " " 
+           << fivecard[3] << " " 
+           << fivecard[4]   ;
+    return stream;
+}
+
 
 void generate_five_card_combos(const std::vector<Card>& cards, std::vector<FiveCards_t>* output_combos){
     for (int i=0; i<7; i++)
@@ -51,7 +61,7 @@ bool is_card_this_suit(const smithers::Card& c1, int suit)
 int count_paired_cards(const FiveCards_t& cards )
 {
     int count=0;
-    for (int i=0; i<4; ++i)
+    for (int i=0; i<5; ++i)
     {
         if (2 == std::count_if(cards.cbegin(), cards.cend(), 
                                std::bind(           
@@ -203,8 +213,6 @@ ScoredFiveCardsPair_t rank_hand(const std::vector<Card>& table, const Hand& hand
     return scored_five_card_pairs[0]; //highest
 
 }
-
-
 
 int score_five_cards(FiveCards_t& cards )
 {
