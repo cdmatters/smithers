@@ -208,7 +208,34 @@ void Smithers::play_tournament()
         play_game();
         mark_broke_players(m_players);
     }
+    publish_to_all(create_tournament_winner_message());
+    for (size_t i=0; i<m_players.size(); i++)
+    {
+        m_players[i].m_in_play= true;
+        m_players[i].m_in_play_this_round = true;
+        m_players[i].m_chips = 10000;
+        m_players[i].m_is_dealer = false;
 
+    } 
+}
+
+Json::Value Smithers::create_tournament_winner_message()
+{
+    std::string winner;
+    int pot = 0 ;
+    for (size_t i=0; i<m_players.size(); i++)
+    {
+        if (m_players[i].m_in_play){
+            winner = m_players[i].m_name;
+            pot = m_players[i].m_chips;
+        }
+    }
+
+    Json::Value root;
+    root["type"]="WINNER";
+    root["name"]=winner;
+    root["winnings"] = pot;
+    return root;
 }
 
 std::vector<Result_t> Smithers::award_winnings(const std::vector<ScoredFiveCardsPair_t>& scored_hands)
@@ -422,7 +449,7 @@ enum MoveType Smithers::process_move(const Json::Value& move, Player& player, in
             last_bet = this_bet;
             return RAISE;  // a real RAISE
         } 
-        else if (new_raise > 0)
+        else if (new_raise >= 0)
         {
             player.m_chips_this_round = last_bet;
             player.m_chips_this_game += last_bet;
@@ -574,18 +601,7 @@ int Smithers::get_next_to_play(int seat)
     }
 }
 
-int Smithers::get_next_not_broke(int seat)
-{
-    int next = (seat + 1) % m_players.size();
-    if (m_players[next].m_in_play)
-    {
-        return next;
-    }
-    else 
-    {
-        return get_next_not_broke(next);
-    }
-}
+
 
 void Smithers::reset_and_move_dealer_to_next_player()
 {
