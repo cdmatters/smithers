@@ -18,8 +18,15 @@ namespace smithers{
 
 
 
-inline Player::Player(const std::string& name, const std::string& hash_key, const int seat, int chips)
-    :m_name(name), m_hash_key(hash_key), m_seat(seat), m_chips(chips), m_in_play(true), m_in_play_this_round(true){};
+inline Player::Player(const std::string& name, const std::string& hash_key, const int seat, int chips):
+    m_name(name), 
+    m_hash_key(hash_key),
+    m_seat(seat),
+    m_chips(chips),
+    m_chips_this_round(0),
+    m_in_play(true),
+    m_in_play_this_round(true)
+    {};
 
 }
 #endif 
