@@ -5,27 +5,9 @@
 
 #include <json/json.h>
 
+#include "card.h"
+
 namespace smithers{
-
-
-
-struct Card{
-    static const char S[5];
-    static const char R[14]; 
-    int rank;
-    int suit;  
-};
-std::ostream& operator<<(std::ostream& stream, const Card& card);
-Json::Value& operator<<(Json::Value& j_val, const Card& card);
-
-struct Hand{
-    const Card card1;
-    const Card card2;
-    bool in_play_at_end_of_round;
-    bool is_dealer;
-};
-std::ostream& operator<<(std::ostream& stream, const Hand& hand);
-Json::Value& operator<<(Json::Value& j_val, const Hand& hand);
 
 class Game{
     public:
@@ -53,10 +35,6 @@ class Game{
         std::vector<Card> m_burnt;
         std::vector<Card> m_table;
         std::vector<Hand> m_hands;
-
-        int m_pot;
-        int last_bet;
-
 
 };
 

@@ -1,8 +1,11 @@
 #include "game.h"
 
+#include "hand_rank.h"
+
 #include <random>
 #include <iostream>
 #include <sstream>
+#include <algorithm>
 
 
 
@@ -12,40 +15,6 @@ namespace {
 
 
 namespace smithers{
-
-const char Card::S[] = {"CDHS"};
-const char Card::R[] = {"23456789TJQKA"};
-
-std::ostream& operator<<(std::ostream& stream, const Card& card)
-{
-    stream << Card::R[card.rank] << Card::S[card.suit];
-    return stream;
-}
-
-std::ostream& operator<<(std::ostream& stream, const Hand& hand)
-{
-    stream << "|"  << hand.card1 << " " << hand.card2 << "|" 
-           << "p " << hand.in_play_at_end_of_round << "|"
-           << "d " << hand.is_dealer << "|";
-    return stream;
-}
-
-Json::Value& operator<<(Json::Value& j_val, const Hand& hand)
-{
-    std::ostringstream _;
-    _ << hand;
-    j_val = _.str();
-    return j_val;
-};
-
-Json::Value& operator<<(Json::Value& j_val, const Card& card)
-{
-    std::ostringstream _;
-    _ << card;
-    j_val = _.str();
-    return j_val;
-};
-
 
 Game::Game()
 {
@@ -136,7 +105,13 @@ const Card Game::deal_a_card()
     return this_card;
 }
 
-int Game::return_winning_hand(){
+
+int Game::return_winning_hand()
+{
+    for (size_t i=0; i<m_hands.size(); i++)
+    {
+        std::cout << m_hands[i] << " " << rank_hand(m_table, m_hands[i]) << std::endl;
+    }
     return 0;
 }
 

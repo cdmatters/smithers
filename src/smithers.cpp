@@ -190,7 +190,6 @@ void Smithers::play_game()
     int winning_seats = new_game.return_winning_hand();
 
     reset_and_move_dealer_to_next_player();
-
 }
 
 void Smithers::play_tournament()
