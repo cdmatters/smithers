@@ -110,7 +110,13 @@ int Game::return_winning_hand()
 {
     for (size_t i=0; i<m_hands.size(); i++)
     {
-        std::cout << m_hands[i] << " " << rank_hand(m_table, m_hands[i]) << std::endl;
+        ScoredFiveCardsPair_t scored_hand = rank_hand(m_table, m_hands[i]);
+        std::cout << scored_hand.first << " ";
+        for (size_t j=0; j<5; j++){
+            std::cout << scored_hand.second[j]<<" ";
+        }
+        std::cout<<std::endl;
+        
     }
     return 0;
 }

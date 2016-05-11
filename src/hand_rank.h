@@ -3,10 +3,15 @@
 
 #include "card.h"
 
-namespace smithers{
+#include <array>
 
-int rank_hand(const std::vector<Card>& table, const Hand& hand);
-int rank_five_cards(std::vector<Card>& cards );
+namespace smithers{
+typedef  std::array<Card,5> FiveCards_t;
+typedef  std::pair<int,FiveCards_t> ScoredFiveCardsPair_t;
+
+
+ScoredFiveCardsPair_t rank_hand(const std::vector<Card>& table, const Hand& hand);
+int score_five_cards(FiveCards_t& cards);
 
 }
 
