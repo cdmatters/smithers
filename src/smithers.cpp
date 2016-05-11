@@ -201,6 +201,7 @@ Json::Value Smithers::create_dealt_hands_message(const std::vector<Hand>& hands)
         player["hand"] << hands[hand_number];
 
         players.append(player);
+        hand_number++;
         
     }
 
