@@ -14,7 +14,12 @@
 namespace smithers{
     typedef std::vector<Player>::iterator players_it_t;
     typedef std::vector<Player>::const_iterator players_cit_t;
-
+    typedef struct r {
+            int score;
+            std::string hand;
+            size_t player_index;
+            int winnings;
+    } Result_t;
 
     enum MoveType {
             RAISE,
@@ -42,6 +47,7 @@ class Smithers{
         Json::Value create_table_cards_message(const std::vector<Card>& cards);
         Json::Value create_move_request(const Player& player, int pot, int last_bet);
         Json::Value create_move_message(const Player& player, enum MoveType move, int amount);
+        Json::Value create_results_message(const std::vector<Result_t>& results);
 
         enum MessageType {
             NEW_GAME=0,
@@ -68,7 +74,7 @@ class Smithers{
         int get_next_not_broke(int i);
         int get_pot_value_for_game();
         void put_betting_round_in_pot();
-        void award_winnings(const std::vector<ScoredFiveCardsPair_t>& scored_hands);
+        std::vector<Result_t> award_winnings(const std::vector<ScoredFiveCardsPair_t>& scored_hands);
 
 
         zmq::context_t m_zmq_context;

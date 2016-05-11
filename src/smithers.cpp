@@ -12,14 +12,7 @@
 
 namespace {
 
-typedef struct r {
-        int score;
-        std::string hand;
-        size_t player_index;
-        int winnings;
-    } Result_t;
 
-bool result_comparator(const Result_t& r1,const Result_t& r2 ){return r1.score>r2.score;}
 
 std::string gen_random(const size_t len)
 {
@@ -82,6 +75,9 @@ bool is_active(const smithers::Player& p)
 } // close anon namespace
 
 namespace smithers{
+
+bool result_comparator(const Result_t& r1,const Result_t& r2 ){return r1.score>r2.score;}
+
 
 Smithers::Smithers():
     m_zmq_context(1),
@@ -168,37 +164,40 @@ void Smithers::play_game()
     Game new_game;
     std::vector<Hand> hands = new_game.deal_hands(m_players.size()); // need to eject players
     Json::Value dealt_hands = create_dealt_hands_message(hands);
-    // add blinds, set dealer
+    // set dealer
     publish_to_all(dealt_hands);
 
     std::vector<std::string> side_pots;
-
+    //add blinds
     play_betting_round(3, 100, 0, side_pots);
 
     new_game.deal_flop();
     Json::Value flop = create_table_cards_message(new_game.get_table());
-    // add pot
+
     publish_to_all(flop);
 
     play_betting_round(1, 100, 0, side_pots);
 
     new_game.deal_river();
     Json::Value river = create_table_cards_message(new_game.get_table());
-    // add pot
+
     publish_to_all(river);
 
     play_betting_round(1, 100, 0, side_pots);
     
     new_game.deal_turn();
     Json::Value turn = create_table_cards_message(new_game.get_table());
-    // add pot
+
     publish_to_all(turn);
 
     play_betting_round(1, 100, 0, side_pots);
 
     std::vector<ScoredFiveCardsPair_t> scored_hands = new_game.return_hand_scores();
 
-    award_winnings(scored_hands);
+    std::vector<Result_t> results = award_winnings(scored_hands);
+    Json::Value res = create_results_message(results);
+    publish_to_all(res);
+
     reset_and_move_dealer_to_next_player();
 }
 
@@ -212,7 +211,7 @@ void Smithers::play_tournament()
 
 }
 
-void Smithers::award_winnings(const std::vector<ScoredFiveCardsPair_t>& scored_hands)
+std::vector<Result_t> Smithers::award_winnings(const std::vector<ScoredFiveCardsPair_t>& scored_hands)
 {
     std::vector<Result_t> results;
     int pot = 0;
@@ -245,12 +244,9 @@ void Smithers::award_winnings(const std::vector<ScoredFiveCardsPair_t>& scored_h
         }
         
         winner.m_chips += results[r].winnings;
-
     }
         
-    for  (size_t r=0; r<results.size(); r++){
-        std::cout<< results[r].score <<" "<< m_players[results[r].player_index].m_name << " "<< results[r].hand << " " << results[r].winnings <<std::endl;;
-    }
+    return results;
     
 
 
@@ -354,6 +350,24 @@ Json::Value Smithers::create_move_message(const Player& player, enum MoveType mo
 
     return root;
     }
+
+Json::Value Smithers::create_results_message(const std::vector<Result_t>& results)
+{
+    Json::Value root;
+    root["type"] = "RESULTS";
+    Json::Value players(Json::arrayValue);
+    for (size_t i=0; i<results.size(); i++){
+        Json::Value p;
+        p["name"] = m_players[results[i].player_index].m_name;
+        p["hand"] = results[i].hand;
+        p["winnings"] = results[i].winnings;
+        players.append(p);
+    }
+    root["players"] = players;
+    return root;
+
+};
+
 
 
 Json::Value Smithers::listen_and_pull_from_queue(const std::string& player_name)
