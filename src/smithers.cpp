@@ -242,6 +242,37 @@ Json::Value Smithers::create_move_request(const std::string& name)
     return root;
 }
 
+Json::Value Smithers::create_move_message(const std::string& name, enum MoveType move, int amount)
+{
+
+    std::string move_string;
+    switch (move)
+    {
+        case FOLD:
+            move_string="FOLD";
+            amount = 0;
+            break;
+        case RAISE:
+            move_string="RAISE_TO";
+            break;
+        case CALL:
+            move_string="CALL";
+            break;
+        case ALL_IN:
+            move_string="ALL_IN";
+            break;
+    }
+
+    Json::Value root;
+    root["type"] = "MOVE";
+    root["move"] = move_string;
+    root["bet"] = amount;
+    root["name"] = name;
+
+    return root;
+    }
+
+
 Json::Value Smithers::listen_and_pull_from_queue(const std::string& player_name)
 {
     m2pp::connection conn("ID", "tcp://127.0.0.1:9900", "tcp://127.0.0.1:9901"); // is it smart to do this here?
@@ -269,7 +300,7 @@ Json::Value Smithers::listen_and_pull_from_queue(const std::string& player_name)
 
 }
 
-bool Smithers::process_move(const Json::Value& move, Player& player, int& min_raise, int& last_bet, int& pot)
+enum MoveType Smithers::process_move(const Json::Value& move, Player& player, int& min_raise, int& last_bet, int& pot)
 {
     std::string this_move = move.get("move", "").asString();
     int this_bet = move.get("chips", "0").asInt();
@@ -283,36 +314,36 @@ bool Smithers::process_move(const Json::Value& move, Player& player, int& min_ra
             player.m_chips_this_round = this_bet;
             
             last_bet = this_bet;
-            return true;  // a real RAISE
+            return RAISE;  // a real RAISE
         } 
         else if (new_raise > 0)
         {
             player.m_chips_this_round = last_bet;
-            return false; // raise < min raise -> CALL
+            return CALL; // raise < min raise -> CALL
         }
         else if (new_raise < 0)
         {
             player.m_in_play_this_round = false;
-            return false; // this bet < last bet -> FOLD
+            return FOLD; // this bet < last bet -> FOLD
         }
     }
     else if (this_move == "CALL")
     {
         player.m_chips_this_round = last_bet;
-        return false;
+        return CALL;
     }
     else if (this_move == "FOLD")
     {
         player.m_in_play_this_round = false;
-        return false; // this bet < last bet -> FOLD   
+        return FOLD; // this bet < last bet -> FOLD   
     }
     else
     {
         player.m_in_play_this_round = false;
-        return false;
+        return FOLD;
     };
 
-    return false; // no compiler warnings
+    return FOLD; // no compiler warnings
 }
 
 void Smithers::play_betting_round(int first_to_bet, int min_raise, int last_bet)
@@ -333,11 +364,12 @@ void Smithers::play_betting_round(int first_to_bet, int min_raise, int last_bet)
         publish_to_all(create_move_request(to_play_name));
         Json::Value move = listen_and_pull_from_queue(to_play_name);
 
-        bool was_raise = process_move(move, m_players[to_play_index], min_raise, last_bet, pot);
-        
-        if (was_raise){
+        enum MoveType result = process_move(move, m_players[to_play_index], min_raise, last_bet, pot);
+        if (result == RAISE){
             last_to_raise_name = to_play_name; // will no always be the case
         }
+ 
+        publish_to_all(create_move_message(to_play_name, result, last_bet ));
 
         to_play_index = get_next_to_play(to_play_index);
         to_play_name =  m_players[to_play_index].m_name;

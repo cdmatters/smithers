@@ -25,7 +25,7 @@ std::ostream& operator<<(std::ostream& stream, const Card& card)
 std::ostream& operator<<(std::ostream& stream, const Hand& hand)
 {
     stream << "|"  << hand.card1 << " " << hand.card2 << "|" 
-           << "p " << hand.in_play << "|"
+           << "p " << hand.in_play_at_end_of_round << "|"
            << "d " << hand.is_dealer << "|";
     return stream;
 }
@@ -61,7 +61,7 @@ const std::vector<Hand>& Game::deal_hands(int number_of_players )
     }
 
     for (int i=0; i<number_of_players; i++){
-        Hand this_hand = {all_cards[i], all_cards[i+number_of_players], true, false, i};
+        Hand this_hand = {all_cards[i], all_cards[i+number_of_players], true, false};
         std::cout << this_hand << std::endl;
         m_hands.push_back(this_hand);
     }
