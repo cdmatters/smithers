@@ -333,7 +333,7 @@ enum MoveType Smithers::process_move(const Json::Value& move, Player& player, in
     std::string this_move = move.get("move", "").asString();
     int this_bet = move.get("chips", "0").asInt();
 
-    if (this_bet + player.m_chips_this_round >= player.m_chips)
+    if (this_bet + player.m_chips_this_game >= player.m_chips)
     {
         player.m_chips_this_round = player.m_chips;
         player.m_chips_this_game = player.m_chips;

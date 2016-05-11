@@ -28,8 +28,8 @@ int main(int argc, char *argv[])
 
 //    waylon_smithers.print_players();
 
-    for (int i=0; i<5; i++){
-        waylon_smithers.play_game();
+    for (int i=0; i<1; i++){
+        waylon_smithers.play_tournament();
         std::cout<<"---"<<std::endl;
     }
 
