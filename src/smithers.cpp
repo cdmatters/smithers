@@ -176,21 +176,21 @@ void Smithers::play_game()
     play_betting_round(3, 100, 0, side_pots);
 
     new_game.deal_flop();
-    Json::Value flop = create_table_cards_message(new_game.get_table());
+    Json::Value flop = create_table_cards_message(new_game.get_table(), get_pot_value_for_game() );
 
     publish_to_all(flop);
 
     play_betting_round(1, 100, 0, side_pots);
 
     new_game.deal_river();
-    Json::Value river = create_table_cards_message(new_game.get_table());
+    Json::Value river = create_table_cards_message(new_game.get_table(), get_pot_value_for_game() );
 
     publish_to_all(river);
 
     play_betting_round(1, 100, 0, side_pots);
     
     new_game.deal_turn();
-    Json::Value turn = create_table_cards_message(new_game.get_table());
+    Json::Value turn = create_table_cards_message(new_game.get_table(), get_pot_value_for_game() );
 
     publish_to_all(turn);
 
@@ -208,12 +208,14 @@ void Smithers::play_game()
 
 void Smithers::play_tournament()
 {
-    std::cout<< std::count_if(m_players.begin(), m_players.end(), is_active);
-    while (std::count_if(m_players.begin(), m_players.end(), is_active) >1){
+    std::cout<< std::count_if(m_players.cbegin(), m_players.cend(), is_active);
+    while (std::count_if(m_players.cbegin(), m_players.cend(), is_active) >1){
         play_game();
         mark_broke_players(m_players);
     }
-    publish_to_all(create_tournament_winner_message());
+
+    players_cit_t win_it = std::find_if(m_players.begin(),m_players.end(), is_active);
+    publish_to_all(create_tournament_winner_message(win_it->m_name, win_it->m_chips));
     for (size_t i=0; i<m_players.size(); i++)
     {
         m_players[i].m_in_play= true;
@@ -224,24 +226,6 @@ void Smithers::play_tournament()
     } 
 }
 
-Json::Value Smithers::create_tournament_winner_message()
-{
-    std::string winner;
-    int pot = 0 ;
-    for (size_t i=0; i<m_players.size(); i++)
-    {
-        if (m_players[i].m_in_play){
-            winner = m_players[i].m_name;
-            pot = m_players[i].m_chips;
-        }
-    }
-
-    Json::Value root;
-    root["type"]="WINNER";
-    root["name"]=winner;
-    root["winnings"] = pot;
-    return root;
-}
 
 std::vector<Result_t> Smithers::award_winnings(const std::vector<ScoredFiveCardsPair_t>& scored_hands)
 {
@@ -285,61 +269,25 @@ std::vector<Result_t> Smithers::award_winnings(const std::vector<ScoredFiveCards
 }
 
 
-
-// Json::Value Smithers::create_dealt_hands_message(const std::vector<Hand>& hands, const std::vector<Player>& players, int dealer)
+// Json::Value Smithers::create_table_cards_message(const std::vector<Card>& cards)
 // {
-
-//     int dealer_seat = get_dealer();
-//     int hand_number = 0;
-//     Json::Value players(Json::arrayValue);
-//     for (size_t i=0; i<m_players.size(); ++i){
-        
-//         int deal_to_seat = (dealer_seat + 1 + i) % m_players.size(); // start left of dealer
-
-//         if (!m_players[deal_to_seat].m_in_play){
-//             m_players[deal_to_seat].m_seat = -1; // you aren't playing, have no hand in hands vector
-//             continue;
-//         }
-
-//         m_players[deal_to_seat].m_seat = hand_number;
-
-//         Json::Value player;
-//         player["name"] = m_players[deal_to_seat].m_name;
-//         player["chips"] = m_players[deal_to_seat].m_chips;
-//         player["hand"] << hands[hand_number];
-
-//         players.append(player);
-//         hand_number++;
-        
-//     }
+//     Json::Value card_vector(Json::arrayValue);
+//     for (std::vector<Card>::const_iterator c_it = cards.cbegin();
+//         c_it != cards.cend();
+//         c_it++){
+//         // ugly
+//         std::ostringstream c;
+//         c << *c_it;
+//         card_vector.append(c.str());
+//     } 
 
 //     Json::Value root;
 //     root["type"] = "DEALT_HANDS";
 //     root["pot"] = 0;
-//     root["players"] = players;
+//     root["cards"] = card_vector;
 
 //     return root;
 // }
-
-Json::Value Smithers::create_table_cards_message(const std::vector<Card>& cards)
-{
-    Json::Value card_vector(Json::arrayValue);
-    for (std::vector<Card>::const_iterator c_it = cards.cbegin();
-        c_it != cards.cend();
-        c_it++){
-        // ugly
-        std::ostringstream c;
-        c << *c_it;
-        card_vector.append(c.str());
-    } 
-
-    Json::Value root;
-    root["type"] = "DEALT_HANDS";
-    root["pot"] = 0;
-    root["cards"] = card_vector;
-
-    return root;
-}
 
 Json::Value Smithers::create_move_request(const Player& player, int pot, int last_bet)
 {

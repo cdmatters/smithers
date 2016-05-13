@@ -44,11 +44,9 @@ class Smithers{
 
         std::string create_new_game_message();
 
-        Json::Value create_table_cards_message(const std::vector<Card>& cards);
         Json::Value create_move_request(const Player& player, int pot, int last_bet);
         Json::Value create_move_message(const Player& player, enum MoveType move, int amount);
         Json::Value create_results_message(const std::vector<Result_t>& results);
-        Json::Value create_tournament_winner_message();
 
 
         enum MessageType {
