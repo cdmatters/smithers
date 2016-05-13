@@ -1,7 +1,5 @@
 #include "smithers.h"
 
-#include "messages.h"
-
 #include <zmq.hpp>
 #include <m2pp.hpp>
 #include <json/json.h>
@@ -267,69 +265,6 @@ std::vector<Result_t> Smithers::award_winnings(const std::vector<ScoredFiveCards
 
 
 }
-
-
-// Json::Value Smithers::create_table_cards_message(const std::vector<Card>& cards)
-// {
-//     Json::Value card_vector(Json::arrayValue);
-//     for (std::vector<Card>::const_iterator c_it = cards.cbegin();
-//         c_it != cards.cend();
-//         c_it++){
-//         // ugly
-//         std::ostringstream c;
-//         c << *c_it;
-//         card_vector.append(c.str());
-//     } 
-
-//     Json::Value root;
-//     root["type"] = "DEALT_HANDS";
-//     root["pot"] = 0;
-//     root["cards"] = card_vector;
-
-//     return root;
-// }
-
-Json::Value Smithers::create_move_request(const Player& player, int pot, int last_bet)
-{
-    Json::Value root;
-    root["type"] = "MOVE_REQUEST";
-    root["pot"] = pot;
-    root["name"] = player.m_name;
-    root["last_bet"] = last_bet;
-    root["chips"] = player.m_chips - player.m_chips_this_round;
-    return root;
-}
-
-Json::Value Smithers::create_move_message(const Player& player, enum MoveType move, int amount)
-{
-
-    std::string move_string;
-    switch (move)
-    {
-        case FOLD:
-            move_string="FOLD";
-            amount = 0;
-            break;
-        case RAISE:
-            move_string="RAISE_TO";
-            break;
-        case CALL:
-            move_string="CALL";
-            break;
-        case ALL_IN:
-            move_string="ALL_IN";
-            break;
-    }
-
-    Json::Value root;
-    root["type"] = "MOVE";
-    root["move"] = move_string;
-    root["bet"] = amount;
-    root["name"] = player.m_name;
-    root["chips"] = player.m_chips - player.m_chips_this_round;
-
-    return root;
-    }
 
 Json::Value Smithers::create_results_message(const std::vector<Result_t>& results)
 {

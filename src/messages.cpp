@@ -68,4 +68,46 @@ Json::Value create_table_cards_message(const std::vector<Card>& cards, int pot)
     return root;
 }
 
+Json::Value create_move_request(const Player& player, int pot, int last_bet)
+{
+    Json::Value root;
+    root["type"] = "MOVE_REQUEST";
+    root["pot"] = pot;
+    root["name"] = player.m_name;
+    root["last_bet"] = last_bet;
+    root["chips"] = player.m_chips - player.m_chips_this_round;
+    return root;
+}
+
+Json::Value create_move_message(const Player& player, enum MoveType move, int amount)
+{
+    std::string move_string;
+    switch (move)
+    {
+        case FOLD:
+            move_string="FOLD";
+            amount = 0;
+            break;
+        case RAISE:
+            move_string="RAISE_TO";
+            break;
+        case CALL:
+            move_string="CALL";
+            break;
+        case ALL_IN:
+            move_string="ALL_IN";
+            break;
+    }
+
+    Json::Value root;
+    
+    root["type"] = "MOVE";
+    root["move"] = move_string;
+    root["bet"] = amount;
+    root["name"] = player.m_name;
+    root["chips"] = player.m_chips - player.m_chips_this_round;
+
+    return root;
+}
+
 }

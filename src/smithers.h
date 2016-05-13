@@ -3,6 +3,8 @@
 
 #include "player.h"
 #include "game.h"
+#include "messages.h"
+
 #include <zmq.hpp>
 #include <json/json.h>
 
@@ -20,13 +22,6 @@ namespace smithers{
             size_t player_index;
             int winnings;
     } Result_t;
-
-    enum MoveType {
-            RAISE,
-            CALL,
-            FOLD,
-            ALL_IN
-    };
     
 class Smithers{
     
@@ -44,8 +39,7 @@ class Smithers{
 
         std::string create_new_game_message();
 
-        Json::Value create_move_request(const Player& player, int pot, int last_bet);
-        Json::Value create_move_message(const Player& player, enum MoveType move, int amount);
+        // Json::Value create_move_message(const Player& player, enum MoveType move, int amount);
         Json::Value create_results_message(const std::vector<Result_t>& results);
 
 
