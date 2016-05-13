@@ -16,12 +16,7 @@
 namespace smithers{
     typedef std::vector<Player>::iterator players_it_t;
     typedef std::vector<Player>::const_iterator players_cit_t;
-    typedef struct r {
-            int score;
-            std::string hand;
-            size_t player_index;
-            int winnings;
-    } Result_t;
+
     
 class Smithers{
     
@@ -39,19 +34,7 @@ class Smithers{
 
         std::string create_new_game_message();
 
-        // Json::Value create_move_message(const Player& player, enum MoveType move, int amount);
-        Json::Value create_results_message(const std::vector<Result_t>& results);
-
-
-        enum MessageType {
-            NEW_GAME=0,
-            DEALT_HANDS, 
-            BET_REQUEST,
-            BET,
-            TABLE_CARDS, 
-            RESULTS,
-        };
-
+        // Json::Value create_results_message(const std::vector<Result_t>& results);
 
     private:
 

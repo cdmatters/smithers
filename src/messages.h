@@ -10,6 +10,13 @@
 
 
 namespace smithers{
+
+    typedef struct r {
+            int score;
+            std::string hand;
+            size_t player_index;
+            int winnings;
+    } Result_t;
     
     enum MoveType {
             RAISE,
@@ -29,7 +36,9 @@ namespace smithers{
     Json::Value create_tournament_winner_message( const std::string& winner, int pot);
 
     Json::Value create_move_message(const Player& player, enum MoveType move, int amount);
-    // Json::Value create_results_message(const std::vector<Result_t>& results);
+    
+    Json::Value create_results_message(const std::vector<Result_t>& results,
+                                       const std::vector<Player>& players );
 
 
 }

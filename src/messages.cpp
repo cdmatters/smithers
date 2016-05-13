@@ -110,4 +110,21 @@ Json::Value create_move_message(const Player& player, enum MoveType move, int am
     return root;
 }
 
+Json::Value create_results_message(const std::vector<Result_t>& results, const std::vector<Player>& players)
+{
+    Json::Value root;
+    root["type"] = "RESULTS";
+    Json::Value players_json(Json::arrayValue);
+    for (size_t i=0; i<results.size(); i++){
+        Json::Value p;
+        p["name"] = players[results[i].player_index].m_name;
+        p["hand"] = results[i].hand;
+        p["winnings"] = results[i].winnings;
+        players_json.append(p);
+    }
+    root["players"] = players_json;
+    return root;
+
+};
+
 }

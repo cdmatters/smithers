@@ -197,7 +197,7 @@ void Smithers::play_game()
     std::vector<ScoredFiveCardsPair_t> scored_hands = new_game.return_hand_scores();
 
     std::vector<Result_t> results = award_winnings(scored_hands);
-    Json::Value res = create_results_message(results);
+    Json::Value res = create_results_message(results, m_players);
     publish_to_all(res);
 
     reset_and_move_dealer_to_next_player();
@@ -265,24 +265,6 @@ std::vector<Result_t> Smithers::award_winnings(const std::vector<ScoredFiveCards
 
 
 }
-
-Json::Value Smithers::create_results_message(const std::vector<Result_t>& results)
-{
-    Json::Value root;
-    root["type"] = "RESULTS";
-    Json::Value players(Json::arrayValue);
-    for (size_t i=0; i<results.size(); i++){
-        Json::Value p;
-        p["name"] = m_players[results[i].player_index].m_name;
-        p["hand"] = results[i].hand;
-        p["winnings"] = results[i].winnings;
-        players.append(p);
-    }
-    root["players"] = players;
-    return root;
-
-};
-
 
 
 Json::Value Smithers::listen_and_pull_from_queue(const std::string& player_name)
