@@ -1,5 +1,7 @@
 #include "smithers.h"
 
+#include "messages.h"
+
 #include <zmq.hpp>
 #include <m2pp.hpp>
 #include <json/json.h>
@@ -162,8 +164,10 @@ void Smithers::play_game()
     std::cout << "play_game" << std::endl;
     
     Game new_game;
+    int dealer_seat = get_dealer();
+    assign_seats(dealer_seat);
     std::vector<Hand> hands = new_game.deal_hands(m_players.size()); // need to eject players
-    Json::Value dealt_hands = create_dealt_hands_message(hands);
+    Json::Value dealt_hands = create_dealt_hands_message(hands, m_players, dealer_seat);
     // set dealer
     publish_to_all(dealt_hands);
 
@@ -199,6 +203,7 @@ void Smithers::play_game()
     publish_to_all(res);
 
     reset_and_move_dealer_to_next_player();
+
 }
 
 void Smithers::play_tournament()
@@ -281,40 +286,40 @@ std::vector<Result_t> Smithers::award_winnings(const std::vector<ScoredFiveCards
 
 
 
-Json::Value Smithers::create_dealt_hands_message(const std::vector<Hand>& hands)
-{
+// Json::Value Smithers::create_dealt_hands_message(const std::vector<Hand>& hands, const std::vector<Player>& players, int dealer)
+// {
 
-    int dealer_seat = get_dealer();
-    int hand_number = 0;
-    Json::Value players(Json::arrayValue);
-    for (size_t i=0; i<m_players.size(); ++i){
+//     int dealer_seat = get_dealer();
+//     int hand_number = 0;
+//     Json::Value players(Json::arrayValue);
+//     for (size_t i=0; i<m_players.size(); ++i){
         
-        int deal_to_seat = (dealer_seat + 1 + i) % m_players.size(); // start left of dealer
+//         int deal_to_seat = (dealer_seat + 1 + i) % m_players.size(); // start left of dealer
 
-        if (!m_players[deal_to_seat].m_in_play){
-            m_players[deal_to_seat].m_seat = -1; // you aren't playing, have no hand in hands vector
-            continue;
-        }
+//         if (!m_players[deal_to_seat].m_in_play){
+//             m_players[deal_to_seat].m_seat = -1; // you aren't playing, have no hand in hands vector
+//             continue;
+//         }
 
-        m_players[deal_to_seat].m_seat = hand_number;
+//         m_players[deal_to_seat].m_seat = hand_number;
 
-        Json::Value player;
-        player["name"] = m_players[deal_to_seat].m_name;
-        player["chips"] = m_players[deal_to_seat].m_chips;
-        player["hand"] << hands[hand_number];
+//         Json::Value player;
+//         player["name"] = m_players[deal_to_seat].m_name;
+//         player["chips"] = m_players[deal_to_seat].m_chips;
+//         player["hand"] << hands[hand_number];
 
-        players.append(player);
-        hand_number++;
+//         players.append(player);
+//         hand_number++;
         
-    }
+//     }
 
-    Json::Value root;
-    root["type"] = "DEALT_HANDS";
-    root["pot"] = 0;
-    root["players"] = players;
+//     Json::Value root;
+//     root["type"] = "DEALT_HANDS";
+//     root["pot"] = 0;
+//     root["players"] = players;
 
-    return root;
-}
+//     return root;
+// }
 
 Json::Value Smithers::create_table_cards_message(const std::vector<Card>& cards)
 {
@@ -602,6 +607,25 @@ int Smithers::get_next_to_play(int seat)
 }
 
 
+int Smithers::assign_seats(int dealer)
+{
+    int seat = 0;
+    for (size_t i=0; i<m_players.size(); ++i)
+    {
+        int seat_no = (dealer + i) % m_players.size();
+        if ( !m_players[seat_no].m_in_play )
+        {
+            m_players[seat_no].m_seat = -1;
+        }
+        else
+        {
+            m_players[seat_no].m_seat = seat;
+            seat++;
+        }
+    }
+    return seat; // number of players
+}
+
 
 void Smithers::reset_and_move_dealer_to_next_player()
 {
@@ -617,5 +641,7 @@ void Smithers::reset_and_move_dealer_to_next_player()
     m_players[next_dealer].m_is_dealer = true;
 
 };
+
+
 
 } // smithers namespace

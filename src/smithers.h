@@ -43,7 +43,7 @@ class Smithers{
         void print_players();
 
         std::string create_new_game_message();
-        Json::Value create_dealt_hands_message(const std::vector<Hand>& hands);
+
         Json::Value create_table_cards_message(const std::vector<Card>& cards);
         Json::Value create_move_request(const Player& player, int pot, int last_bet);
         Json::Value create_move_message(const Player& player, enum MoveType move, int amount);
@@ -71,6 +71,7 @@ class Smithers{
 
         
         int get_dealer();
+        int assign_seats(int dealer_seat);
         void reset_and_move_dealer_to_next_player();
         int get_next_to_play(int i);
         int get_next_not_broke(int i);
