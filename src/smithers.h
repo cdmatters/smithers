@@ -38,7 +38,7 @@ class Smithers{
 
     private:
 
-        void play_betting_round(int first_to_play, int min_raise, int last_bet, std::vector<std::string>& side_pots);
+        void play_betting_round(int first_to_play, int min_raise, int last_bet);
         Json::Value listen_and_pull_from_queue(const std::string& player_name);
         enum MoveType process_move(const Json::Value& move, Player&, int& min_raise, int& last_bet);
 
@@ -46,10 +46,14 @@ class Smithers{
 
         
         int get_dealer();
-        int assign_seats(int dealer_seat);
-        void reset_and_move_dealer_to_next_player();
         int get_next_to_play(int i);
         int get_next_not_broke(int i);
+
+        int count_active_players();
+
+        
+        int assign_seats(int dealer_seat);
+        void reset_and_move_dealer_to_next_player();
         int get_pot_value_for_game();
         void put_betting_round_in_pot();
         std::vector<Result_t> award_winnings(const std::vector<ScoredFiveCardsPair_t>& scored_hands);

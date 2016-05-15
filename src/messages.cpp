@@ -3,6 +3,18 @@
 
 namespace smithers{
 
+Json::Value create_registered_message( const Player& player )
+{
+    Json::Value root;
+
+    root["type"] = "REGISTERED";
+    root["name"] = player.m_name;
+    root["chips"] = player.m_chips;
+    root["key"] = player.m_hash_key;
+
+    return root;
+}
+
 
 
 Json::Value create_dealt_hands_message(

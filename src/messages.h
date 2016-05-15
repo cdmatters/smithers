@@ -24,6 +24,8 @@ namespace smithers{
             FOLD,
             ALL_IN
     };
+ 
+    Json::Value create_registered_message( const Player& player );
 
     Json::Value create_dealt_hands_message( const std::vector<Hand>& hands,
                                             const std::vector<Player>& players,

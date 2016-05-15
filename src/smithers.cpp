@@ -14,7 +14,7 @@ namespace {
 
 
 
-std::string gen_random(const size_t len)
+std::string gen_random_string(const size_t len)
 {
     char s[len];
     static const char alphanum[] =
@@ -67,7 +67,7 @@ void mark_broke_players(std::vector<smithers::Player>& players)
     }
 }
 
-bool is_active(const smithers::Player& p)
+bool is_active( const smithers::Player& p )
 {
     return (p.m_chips>0);
 }
@@ -119,15 +119,10 @@ void Smithers::await_registered_players(int max_players, int max_chips)
         
 
 
-        Player new_player(name, gen_random(100), seat, max_chips);
-        
-        Json::Value resp_json;
-        resp_json["name"] = new_player.m_name;
-        resp_json["chips"] = new_player.m_chips;
-        resp_json["key"] = new_player.m_hash_key;
+        Player new_player( name, gen_random_string(100), seat, max_chips );
 
         std::ostringstream resp;
-        resp << resp_json;
+        resp << create_registered_message(new_player);
 
 
         conn.reply_http(req, resp.str());
@@ -158,47 +153,36 @@ void Smithers::publish_to_all(const Json::Value& json)
 }
 
 void Smithers::play_game()
-{
-    std::cout << "play_game" << std::endl;
-    
+{    
     Game new_game;
     int dealer_seat = get_dealer();
     assign_seats(dealer_seat);
-    std::vector<Hand> hands = new_game.deal_hands(m_players.size()); // need to eject players
-    Json::Value dealt_hands = create_dealt_hands_message(hands, m_players, dealer_seat);
-    // set dealer
-    publish_to_all(dealt_hands);
 
-    std::vector<std::string> side_pots;
+    std::vector<Hand> hands = new_game.deal_hands( count_active_players() ); 
+    
+    publish_to_all( create_dealt_hands_message( hands, m_players, dealer_seat ) );
+
     //add blinds
-    play_betting_round(3, 100, 0, side_pots);
+    play_betting_round(3, 100, 0);
 
     new_game.deal_flop();
-    Json::Value flop = create_table_cards_message(new_game.get_table(), get_pot_value_for_game() );
+    publish_to_all( create_table_cards_message(new_game.get_table(), get_pot_value_for_game() ) );
 
-    publish_to_all(flop);
-
-    play_betting_round(1, 100, 0, side_pots);
+    play_betting_round(1, 100, 0);
 
     new_game.deal_river();
-    Json::Value river = create_table_cards_message(new_game.get_table(), get_pot_value_for_game() );
+    publish_to_all( create_table_cards_message(new_game.get_table(), get_pot_value_for_game() ) );
 
-    publish_to_all(river);
-
-    play_betting_round(1, 100, 0, side_pots);
+    play_betting_round(1, 100, 0);
     
     new_game.deal_turn();
-    Json::Value turn = create_table_cards_message(new_game.get_table(), get_pot_value_for_game() );
+    publish_to_all( create_table_cards_message(new_game.get_table(), get_pot_value_for_game() ) );
 
-    publish_to_all(turn);
+    play_betting_round(1, 100, 0);
 
-    play_betting_round(1, 100, 0, side_pots);
 
-    std::vector<ScoredFiveCardsPair_t> scored_hands = new_game.return_hand_scores();
-
-    std::vector<Result_t> results = award_winnings(scored_hands);
-    Json::Value res = create_results_message(results, m_players);
-    publish_to_all(res);
+    std::vector<Result_t> results = award_winnings( new_game.return_hand_scores() );
+    publish_to_all( create_results_message(results, m_players) );
 
     reset_and_move_dealer_to_next_player();
 
@@ -206,14 +190,13 @@ void Smithers::play_game()
 
 void Smithers::play_tournament()
 {
-    std::cout<< std::count_if(m_players.cbegin(), m_players.cend(), is_active);
-    while (std::count_if(m_players.cbegin(), m_players.cend(), is_active) >1){
+    while ( count_active_players() > 1 ){
         play_game();
         mark_broke_players(m_players);
     }
 
-    players_cit_t win_it = std::find_if(m_players.begin(),m_players.end(), is_active);
-    publish_to_all(create_tournament_winner_message(win_it->m_name, win_it->m_chips));
+    players_cit_t win_it = std::find_if( m_players.begin(), m_players.end(), is_active );
+    publish_to_all( create_tournament_winner_message( win_it->m_name, win_it->m_chips ) );
     for (size_t i=0; i<m_players.size(); i++)
     {
         m_players[i].m_in_play= true;
@@ -370,7 +353,7 @@ int Smithers::get_pot_value_for_game() //bad unidiomatic
 };
 
 
-void Smithers::play_betting_round(int first_to_bet, int min_raise, int last_bet, std::vector<std::string>& side_pots)
+void Smithers::play_betting_round(int first_to_bet, int min_raise, int last_bet)
 {
 
     int to_play_index = get_dealer();
@@ -399,7 +382,6 @@ void Smithers::play_betting_round(int first_to_bet, int min_raise, int last_bet,
                 last_bet = this_player.m_chips_this_round;
                 last_to_raise_name = this_player.m_name; 
             }
-            side_pots.push_back(this_player.m_name);
             this_player.m_all_in_this_round = true;
         }
 
@@ -471,7 +453,6 @@ int Smithers::get_next_to_play(int seat)
     }
 }
 
-
 int Smithers::assign_seats(int dealer)
 {
     int seat = 0;
@@ -489,6 +470,11 @@ int Smithers::assign_seats(int dealer)
         }
     }
     return seat; // number of players
+}
+
+int Smithers::count_active_players()
+{
+    return std::count_if(m_players.cbegin(), m_players.cend(), is_active);
 }
 
 
