@@ -35,7 +35,7 @@ Json::Value create_dealt_hands_message(
 
         Json::Value player;
         player["name"] = players[deal_to_seat].m_name;
-        player["chips"] = players[deal_to_seat].m_chips;
+        player["chips"] = players[deal_to_seat].m_chips - players[deal_to_seat].m_chips_this_round - players[deal_to_seat].m_chips_this_game ;
         player["hand"] << hands[hand_number];
 
         players_json.append(player);
@@ -87,7 +87,7 @@ Json::Value create_move_request(const Player& player, int pot, int last_bet)
     root["pot"] = pot;
     root["name"] = player.m_name;
     root["last_bet"] = last_bet;
-    root["chips"] = player.m_chips - player.m_chips_this_round;
+    root["chips"] = player.m_chips - player.m_chips_this_round - player.m_chips_this_game;
     return root;
 }
 
@@ -117,7 +117,7 @@ Json::Value create_move_message(const Player& player, enum MoveType move, int am
     root["move"] = move_string;
     root["bet"] = amount;
     root["name"] = player.m_name;
-    root["chips"] = player.m_chips - player.m_chips_this_round;
+    root["chips"] = player.m_chips - player.m_chips_this_round - player.m_chips_this_game;
 
     return root;
 }

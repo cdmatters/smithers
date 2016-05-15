@@ -98,7 +98,7 @@ void Smithers::await_registered_players(int max_players, int max_chips)
         m2pp::request req = conn.recv();
 
         if (req.disconnect) {
-            std::cout << "== disconnect ==" << std::endl;
+            // std::cout << "== disconnect ==" << std::endl;
             continue;
         }
 
@@ -140,13 +140,16 @@ void Smithers::await_registered_players(int max_players, int max_chips)
 
 void Smithers::publish_to_all(const std::string& message)
 {
-    std::cout << "ALL: " << message << std::endl;
+
     zmq::message_t zmq_message(message.begin(), message.end());
     m_publisher.send(zmq_message);
 }
 
 void Smithers::publish_to_all(const Json::Value& json)
 {
+    if (json["type"]=="WINNER"){
+        std::cout << "ALL: " << json << std::endl;
+    }
     std::ostringstream message;
     message << json;
     publish_to_all(message.str());
@@ -158,7 +161,7 @@ void Smithers::play_game()
     int dealer_seat = get_dealer();
     assign_seats(dealer_seat);
 
-    std::vector<Hand> hands = new_game.deal_hands( count_active_players() ); 
+    std::vector<Hand> hands = new_game.deal_hands( m_players.size() ); 
     
     publish_to_all( create_dealt_hands_message( hands, m_players, dealer_seat ) );
 
@@ -190,6 +193,16 @@ void Smithers::play_game()
 
 void Smithers::play_tournament()
 {
+    for (size_t i=0; i<m_players.size(); i++)
+    {
+        m_players[i].m_in_play= true;
+        m_players[i].m_in_play_this_round = true;
+        m_players[i].m_chips = 10000;
+        m_players[i].m_chips_this_game = 0;
+        m_players[i].m_chips_this_round = 0;
+
+    } 
+
     while ( count_active_players() > 1 ){
         play_game();
         mark_broke_players(m_players);
@@ -197,24 +210,15 @@ void Smithers::play_tournament()
 
     players_cit_t win_it = std::find_if( m_players.begin(), m_players.end(), is_active );
     publish_to_all( create_tournament_winner_message( win_it->m_name, win_it->m_chips ) );
-    for (size_t i=0; i<m_players.size(); i++)
-    {
-        m_players[i].m_in_play= true;
-        m_players[i].m_in_play_this_round = true;
-        m_players[i].m_chips = 10000;
-        m_players[i].m_is_dealer = false;
-
-    } 
 }
 
 
 std::vector<Result_t> Smithers::award_winnings(const std::vector<ScoredFiveCardsPair_t>& scored_hands)
 {
     std::vector<Result_t> results;
-    int pot = 0;
+
     for (size_t i=0; i<m_players.size(); i++){   
         
-        pot += m_players[i].m_chips_this_game;
         if (!m_players[i].m_in_play || !m_players[i].m_in_play_this_round)
         {
             continue;
@@ -238,6 +242,7 @@ std::vector<Result_t> Smithers::award_winnings(const std::vector<ScoredFiveCards
                             winners_bet : m_players[p].m_chips_this_round;
             results[r].winnings += amount;
             m_players[p].m_chips_this_game -= amount;
+            m_players[p].m_chips -= amount;
         }
         
         winner.m_chips += results[r].winnings;
@@ -277,16 +282,17 @@ Json::Value Smithers::listen_and_pull_from_queue(const std::string& player_name)
 
 }
 
-enum MoveType Smithers::process_move(const Json::Value& move, Player& player, int& min_raise, int& last_bet)
+enum MoveType Smithers::process_move(const Json::Value& move,
+                                     Player& player,
+                                    int& min_raise,
+                                    int& last_bet)
 {
     std::string this_move = move.get("move", "").asString();
     int this_bet = move.get("chips", "0").asInt();
 
-    if (this_bet + player.m_chips_this_round >= player.m_chips)
+    if (this_bet + player.m_chips_this_round + player.m_chips_this_game>= player.m_chips)
     {
-        std::cout << "HERE" <<std::endl;
-        player.m_chips_this_round = player.m_chips;
-        player.m_chips_this_game += player.m_chips;
+        player.m_chips_this_round = player.m_chips - player.m_chips_this_game;
         return ALL_IN;
     }
 
@@ -297,16 +303,13 @@ enum MoveType Smithers::process_move(const Json::Value& move, Player& player, in
         {    
             min_raise = new_raise;
             player.m_chips_this_round = this_bet;
-            player.m_chips_this_game += this_bet;
-            
+
             last_bet = this_bet;
             return RAISE;  // a real RAISE
         } 
         else if (new_raise >= 0)
         {
             player.m_chips_this_round = last_bet;
-            player.m_chips_this_game += last_bet;
-
             return CALL; // raise < min raise -> CALL
         }
         else if (new_raise < 0)
@@ -317,15 +320,12 @@ enum MoveType Smithers::process_move(const Json::Value& move, Player& player, in
     }
     else if (this_move == "CALL")
     {
-        if (last_bet > player.m_chips) 
+        if (last_bet + player.m_chips_this_game + player.m_chips_this_game > player.m_chips ) 
         {
-            std::cout << "THERE"<<  player.m_chips_this_round <<" "<< player.m_chips_this_game << " " << player.m_chips <<std::endl;
-            player.m_chips_this_round = player.m_chips;
-            player.m_chips_this_game += player.m_chips;
+            player.m_chips_this_round = player.m_chips - player.m_chips_this_game;
             return ALL_IN;
         }
         player.m_chips_this_round = last_bet;
-        player.m_chips_this_game += last_bet;
         return CALL;
     }
     else if (this_move == "FOLD")
@@ -342,12 +342,22 @@ enum MoveType Smithers::process_move(const Json::Value& move, Player& player, in
     return FOLD; // no compiler warnings
 }
 
-int Smithers::get_pot_value_for_game() //bad unidiomatic
+void Smithers::transfer_round_bets_to_game_bets()
+{ 
+    for (players_it_t it = m_players.begin(); it != m_players.end(); it++)
+    {
+        it->m_chips_this_game += it->m_chips_this_round; 
+        it->m_chips_this_round = 0;
+
+    }
+};
+
+int Smithers::get_pot_value_for_game() 
 {
     int sum = 0; 
-    for (size_t i=0; i<m_players.size(); i++)
+    for (players_it_t it = m_players.begin(); it != m_players.end(); it++)
     {
-        sum += m_players[i].m_chips_this_game;
+        sum += it->m_chips_this_game;
     }
     return sum;
 };
@@ -357,32 +367,28 @@ void Smithers::play_betting_round(int first_to_bet, int min_raise, int last_bet)
 {
 
     int to_play_index = get_dealer();
-    for (int i=0; i<first_to_bet; i++){
-        to_play_index = get_next_to_play(to_play_index);
+
+    for (int i=0; i<first_to_bet; i++){ // ie 3rd from dealer with blinds, 1 if not.
+        to_play_index = get_next_to_play( to_play_index );
     }
 
     std::string to_play_name = m_players[to_play_index].m_name;
     std::string last_to_raise_name = to_play_name;
 
     do {
-        Player& this_player = m_players[to_play_index];
 
-        // 1. Ask for a move (giving info)
-        publish_to_all(create_move_request(this_player, get_pot_value_for_game(), last_bet));
-        
-        // 2. Pull relevant move down
+        Player& this_player = m_players[to_play_index];
+        publish_to_all( create_move_request(this_player, get_pot_value_for_game(), last_bet ));
+
         Json::Value move = listen_and_pull_from_queue(this_player.m_name);
         
-        // 3. Process move
         enum MoveType result = process_move(move, this_player, min_raise, last_bet);
-        if (result == ALL_IN)
+        
+        if (result == ALL_IN &&
+            this_player.m_chips_this_round > last_bet)
         {
-            if (this_player.m_chips_this_round > last_bet + min_raise)
-            {
-                last_bet = this_player.m_chips_this_round;
-                last_to_raise_name = this_player.m_name; 
-            }
-            this_player.m_all_in_this_round = true;
+            last_bet = this_player.m_chips_this_round;
+            last_to_raise_name = this_player.m_name; 
         }
 
         if (result == RAISE)
@@ -391,28 +397,17 @@ void Smithers::play_betting_round(int first_to_bet, int min_raise, int last_bet)
         }
  
         // 4. Tell people about it
-        publish_to_all(create_move_message(this_player, result, this_player.m_chips_this_round ));
-        
+        publish_to_all( create_move_message( this_player, result, this_player.m_chips_this_round ) );
         
         // 5. Move to next player
         to_play_index = get_next_to_play(to_play_index);
         to_play_name =  m_players[to_play_index].m_name; 
     } while (last_to_raise_name != to_play_name);
 
-
     // Finally add this round's betting to grand pot
-    put_betting_round_in_pot();
+    transfer_round_bets_to_game_bets();
 }
 
-void Smithers::put_betting_round_in_pot()
-{ 
-    for (size_t i=0; i<m_players.size(); i++)
-    {
-        m_players[i].m_chips -= m_players[i].m_chips_this_round; 
-        m_players[i].m_chips_this_round = 0;
-        std::cout<<m_players[i].m_name << " "<< m_players[i].m_chips_this_game << std::endl;
-    }
-};
 
 void Smithers::print_players()
 {
@@ -433,6 +428,8 @@ void Smithers::print_players()
     message << "]" << std::endl;
     publish_to_all(message.str());
 }
+
+
 
 int Smithers::get_dealer()
 {
@@ -458,8 +455,8 @@ int Smithers::assign_seats(int dealer)
     int seat = 0;
     for (size_t i=0; i<m_players.size(); ++i)
     {
-        int seat_no = (dealer + i) % m_players.size();
-        if ( !m_players[seat_no].m_in_play )
+        int seat_no = (dealer + i + 1) % m_players.size();
+        if ( ! m_players[seat_no].m_in_play )
         {
             m_players[seat_no].m_seat = -1;
         }
@@ -485,9 +482,8 @@ void Smithers::reset_and_move_dealer_to_next_player()
         m_players[i].m_in_play_this_round = true;
     }
     int next_dealer = get_next_to_play(dealer);
+    std::cout<< dealer<< " "<< next_dealer << std::endl;
 
-    std::cout<< "OLD DEALER: " << dealer << " "<< m_players[dealer].m_name<<std::endl;
-    std::cout<< "NEW DEALER: " << next_dealer << " " <<m_players[next_dealer].m_name<<std::endl;
     m_players[dealer].m_is_dealer = false;
     m_players[next_dealer].m_is_dealer = true;
 

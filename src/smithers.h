@@ -55,7 +55,7 @@ class Smithers{
         int assign_seats(int dealer_seat);
         void reset_and_move_dealer_to_next_player();
         int get_pot_value_for_game();
-        void put_betting_round_in_pot();
+        void transfer_round_bets_to_game_bets();
         std::vector<Result_t> award_winnings(const std::vector<ScoredFiveCardsPair_t>& scored_hands);
 
 
