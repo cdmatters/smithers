@@ -30,6 +30,34 @@ int count_active_players(const std::vector<Player>& players)
     return std::count_if(players.cbegin(), players.cend(), [](const Player p){return p.m_chips>0;});
 };
 
+// ONE LINERS -> see std::sum when you get internet again...
+int get_pot_value_for_round(const std::vector<Player>& players) 
+{
+    int sum = 0; 
+    for (std::vector<Player>::const_iterator c_it = players.cbegin(); c_it != players.cend(); c_it++)
+    {
+        sum += c_it->m_chips_this_round;
+    }
+    return sum;
+};
+int get_pot_value_for_game(const std::vector<Player>& players) 
+{
+    int sum = 0; 
+    for (std::vector<Player>::const_iterator c_it = players.cbegin(); c_it != players.cend(); c_it++)
+    {
+        sum += c_it->m_chips_this_game;
+    }
+    return sum;
+};
+int get_all_chips_at_table(const std::vector<Player>& players) 
+{
+    int sum = 0; 
+    for (std::vector<Player>::const_iterator c_it = players.cbegin(); c_it != players.cend(); c_it++)
+    {
+        sum += c_it->m_chips_this_game + c_it->m_chips_this_round + c_it->m_chips;
+    }
+    return sum;
+};
 
 void mark_broke_players(std::vector<smithers::Player>& players)
 {
@@ -41,6 +69,20 @@ void mark_broke_players(std::vector<smithers::Player>& players)
         };
     }
 };
+
+void transfer_round_bets_to_game_bets(std::vector<Player>& players)
+{ 
+    for (std::vector<Player>::iterator it = players.begin(); it != players.end(); it++)
+    {
+        it->m_chips_this_game += it->m_chips_this_round; 
+        it->m_chips_this_round = 0;
+
+    }
+};
+
+
+
+
 
 } // close player_utils 
 } // close smithers

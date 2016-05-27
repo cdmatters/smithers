@@ -150,17 +150,17 @@ void Smithers::play_game()
     play_betting_round(3, 100, 0);
 
     new_game.deal_flop();
-    publish_to_all( create_table_cards_message(new_game.get_table(), get_pot_value_for_game() ) );
+    publish_to_all( create_table_cards_message(new_game.get_table(), player_utils::get_pot_value_for_game(m_players) ) );
 
     play_betting_round(1, 100, 0);
 
     new_game.deal_river();
-    publish_to_all( create_table_cards_message(new_game.get_table(), get_pot_value_for_game() ) );
+    publish_to_all( create_table_cards_message(new_game.get_table(), player_utils::get_pot_value_for_game(m_players) ) );
 
     play_betting_round(1, 100, 0);
     
     new_game.deal_turn();
-    publish_to_all( create_table_cards_message(new_game.get_table(), get_pot_value_for_game() ) );
+    publish_to_all( create_table_cards_message(new_game.get_table(), player_utils::get_pot_value_for_game(m_players) ) );
 
     play_betting_round(1, 100, 0);
 
@@ -323,26 +323,6 @@ enum MoveType Smithers::process_move(const Json::Value& move,
     return FOLD; // no compiler warnings
 }
 
-void Smithers::transfer_round_bets_to_game_bets()
-{ 
-    for (players_it_t it = m_players.begin(); it != m_players.end(); it++)
-    {
-        it->m_chips_this_game += it->m_chips_this_round; 
-        it->m_chips_this_round = 0;
-
-    }
-};
-
-int Smithers::get_pot_value_for_game() 
-{
-    int sum = 0; 
-    for (players_it_t it = m_players.begin(); it != m_players.end(); it++)
-    {
-        sum += it->m_chips_this_game;
-    }
-    return sum;
-};
-
 
 void Smithers::play_betting_round(int first_to_bet, int min_raise, int last_bet)
 {
@@ -359,7 +339,7 @@ void Smithers::play_betting_round(int first_to_bet, int min_raise, int last_bet)
     do {
 
         Player& this_player = m_players[to_play_index];
-        publish_to_all( create_move_request(this_player, get_pot_value_for_game(), last_bet ));
+        publish_to_all( create_move_request(this_player, player_utils::get_pot_value_for_game(m_players), last_bet ));
 
         Json::Value move = listen_and_pull_from_queue(this_player.m_name);
         
@@ -386,7 +366,7 @@ void Smithers::play_betting_round(int first_to_bet, int min_raise, int last_bet)
     } while (last_to_raise_name != to_play_name);
 
     // Finally add this round's betting to grand pot
-    transfer_round_bets_to_game_bets();
+    player_utils::transfer_round_bets_to_game_bets(m_players);
 }
 
 
