@@ -65,11 +65,6 @@ void mark_broke_players(std::vector<smithers::Player>& players)
     }
 }
 
-bool is_active( const smithers::Player& p )
-{
-    return (p.m_chips>0);
-}
-
 } // close anon namespace
 
 namespace smithers{
@@ -201,12 +196,12 @@ void Smithers::play_tournament()
 
     } 
 
-    while ( count_active_players() > 1 ){
+    while ( player_utils::count_active_players(m_players) > 1 ){
         play_game();
         mark_broke_players(m_players);
     }
 
-    players_cit_t win_it = std::find_if( m_players.begin(), m_players.end(), is_active );
+    players_cit_t win_it = std::find_if( m_players.begin(), m_players.end(), [](const Player p){return p.m_chips>0;} );
     publish_to_all( create_tournament_winner_message( win_it->m_name, win_it->m_chips ) );
 }
 
@@ -367,7 +362,7 @@ void Smithers::play_betting_round(int first_to_bet, int min_raise, int last_bet)
     int to_play_index = player_utils::get_dealer(m_players);
 
     for (int i=0; i<first_to_bet; i++){ // ie 3rd from dealer with blinds, 1 if not.
-        to_play_index = get_next_to_play( to_play_index );
+        to_play_index = player_utils::get_next_to_play(m_players,  to_play_index );
     }
 
     std::string to_play_name = m_players[to_play_index].m_name;
@@ -398,7 +393,7 @@ void Smithers::play_betting_round(int first_to_bet, int min_raise, int last_bet)
         publish_to_all( create_move_message( this_player, result, this_player.m_chips_this_round ) );
         
         // 5. Move to next player
-        to_play_index = get_next_to_play(to_play_index);
+        to_play_index = player_utils::get_next_to_play(m_players, to_play_index);
         to_play_name =  m_players[to_play_index].m_name; 
     } while (last_to_raise_name != to_play_name);
 
@@ -427,20 +422,6 @@ void Smithers::print_players()
     publish_to_all(message.str());
 }
 
-
-int Smithers::get_next_to_play(int seat)
-{
-    int next = (seat + 1) % m_players.size();
-    if (m_players[next].m_in_play && m_players[next].m_in_play_this_round)
-    {
-        return next;
-    }
-    else 
-    {
-        return get_next_to_play(next);
-    }
-}
-
 int Smithers::assign_seats(int dealer)
 {
     int seat = 0;
@@ -460,19 +441,13 @@ int Smithers::assign_seats(int dealer)
     return seat; // number of players
 }
 
-int Smithers::count_active_players()
-{
-    return std::count_if(m_players.cbegin(), m_players.cend(), is_active);
-}
-
-
 void Smithers::reset_and_move_dealer_to_next_player()
 {
     int dealer = player_utils::get_dealer(m_players);
     for (size_t i=0; i<m_players.size(); ++i){
         m_players[i].m_in_play_this_round = true;
     }
-    int next_dealer = get_next_to_play(dealer);
+    int next_dealer = player_utils::get_next_to_play(m_players, dealer);
     std::cout<< dealer<< " "<< next_dealer << std::endl;
 
     m_players[dealer].m_is_dealer = false;
