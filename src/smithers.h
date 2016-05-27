@@ -44,14 +44,6 @@ class Smithers{
 
         std::vector<Player> m_players;
 
-        
-        int get_dealer();
-        int get_next_to_play(int i);
-        int get_next_not_broke(int i);
-
-        int count_active_players();
-
-        
         int assign_seats(int dealer_seat);
         void reset_and_move_dealer_to_next_player();
         int get_pot_value_for_game();

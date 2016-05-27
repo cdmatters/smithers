@@ -25,14 +25,21 @@ int get_next_to_play(const std::vector<Player>& players, int seat)
     }
 };
 
-int get_next_not_broke(const std::vector<Player>& players, int i)
-{
-    return 0;
-};
-
 int count_active_players(const std::vector<Player>& players)
 {
     return std::count_if(players.cbegin(), players.cend(), [](const Player p){return p.m_chips>0;});
+};
+
+
+void mark_broke_players(std::vector<smithers::Player>& players)
+{
+    for (size_t i=0; i<players.size(); i++)
+    {
+        if (players[i].m_chips<=0)
+        {
+            players[i].m_in_play = false;
+        };
+    }
 };
 
 } // close player_utils 

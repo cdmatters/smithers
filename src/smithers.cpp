@@ -53,18 +53,6 @@ void log_request(const m2pp::request& req)
     std::cout << log_request.str();
 }
 
-
-void mark_broke_players(std::vector<smithers::Player>& players)
-{
-    for (size_t i=0; i<players.size(); i++)
-    {
-        if (players[i].m_chips<=0)
-        {
-            players[i].m_in_play = false;
-        };
-    }
-}
-
 } // close anon namespace
 
 namespace smithers{
@@ -198,7 +186,7 @@ void Smithers::play_tournament()
 
     while ( player_utils::count_active_players(m_players) > 1 ){
         play_game();
-        mark_broke_players(m_players);
+        player_utils::mark_broke_players(m_players);
     }
 
     players_cit_t win_it = std::find_if( m_players.begin(), m_players.end(), [](const Player p){return p.m_chips>0;} );
