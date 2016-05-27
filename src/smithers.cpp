@@ -1,5 +1,7 @@
 #include "smithers.h"
 
+#include "player_utils.h"
+
 #include <zmq.hpp>
 #include <m2pp.hpp>
 #include <json/json.h>
@@ -51,10 +53,6 @@ void log_request(const m2pp::request& req)
     std::cout << log_request.str();
 }
 
-bool is_dealer(const smithers::Player& p)
-{
-    return p.m_is_dealer;
-}
 
 void mark_broke_players(std::vector<smithers::Player>& players)
 {
@@ -158,7 +156,7 @@ void Smithers::publish_to_all(const Json::Value& json)
 void Smithers::play_game()
 {    
     Game new_game;
-    int dealer_seat = get_dealer();
+    int dealer_seat = player_utils::get_dealer(m_players);
     assign_seats(dealer_seat);
 
     std::vector<Hand> hands = new_game.deal_hands( m_players.size() ); 
@@ -366,7 +364,7 @@ int Smithers::get_pot_value_for_game()
 void Smithers::play_betting_round(int first_to_bet, int min_raise, int last_bet)
 {
 
-    int to_play_index = get_dealer();
+    int to_play_index = player_utils::get_dealer(m_players);
 
     for (int i=0; i<first_to_bet; i++){ // ie 3rd from dealer with blinds, 1 if not.
         to_play_index = get_next_to_play( to_play_index );
@@ -430,13 +428,6 @@ void Smithers::print_players()
 }
 
 
-
-int Smithers::get_dealer()
-{
-    std::vector<Player>::iterator it = std::find_if(m_players.begin(), m_players.end(), is_dealer);
-    return it - m_players.begin(); 
-}
-
 int Smithers::get_next_to_play(int seat)
 {
     int next = (seat + 1) % m_players.size();
@@ -477,7 +468,7 @@ int Smithers::count_active_players()
 
 void Smithers::reset_and_move_dealer_to_next_player()
 {
-    int dealer = get_dealer();
+    int dealer = player_utils::get_dealer(m_players);
     for (size_t i=0; i<m_players.size(); ++i){
         m_players[i].m_in_play_this_round = true;
     }
