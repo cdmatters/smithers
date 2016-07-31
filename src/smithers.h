@@ -2,7 +2,7 @@
 #define SMITHERS
 
 #include "player.h"
-#include "game.h"
+#include "card_game.h"
 #include "messages.h"
 
 #include <zmq.hpp>

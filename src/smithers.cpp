@@ -138,7 +138,7 @@ void Smithers::publish_to_all(const Json::Value& json)
 
 void Smithers::play_game()
 {    
-    Game new_game;
+    CardGame new_game;
     int dealer_seat = player_utils::get_dealer(m_players);
     assign_seats(dealer_seat);
 

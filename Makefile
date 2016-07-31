@@ -12,7 +12,7 @@ prefix=/usr/local
 INCDIRS= -I$(prefix)/include -I./external/include -I./src -I.
 LIBDIRS= -L$(prefix)/lib -L./external/lib
 
-BOTBATTLE=pbbattle
+BOTBATTLE=smithers
 
 all: main.m.cpp $(EXTERNAL_OBJ_FILES) $(OBJ_FILES) 
 	$(CXX) -o $(BOTBATTLE).tsk $(CXXFLAGS) $(LIBDIRS) $(INCDIRS)  $(LIBS) $^

@@ -1,4 +1,4 @@
-#include "game.h"
+#include "card_game.h"
 
 #include <random>
 #include <iostream>
@@ -14,13 +14,13 @@ namespace {
 
 namespace smithers{
 
-Game::Game()
+CardGame::CardGame()
 {
     build_deck();
 }
 
 
-const std::vector<Hand>& Game::deal_hands(int number_of_players )
+const std::vector<Hand>& CardGame::deal_hands(int number_of_players )
 {
     std::vector<Card> all_cards;
     for (int i=0; i< 2*number_of_players; i++){
@@ -35,7 +35,7 @@ const std::vector<Hand>& Game::deal_hands(int number_of_players )
     return m_hands;    
 }
 
-std::vector<Card> Game::deal_flop()
+std::vector<Card> CardGame::deal_flop()
 {
     std::vector<Card> flop;
     burn_card(deal_a_card()); // burn 
@@ -47,7 +47,7 @@ std::vector<Card> Game::deal_flop()
     return flop;
 }
 
-Card Game::deal_river()
+Card CardGame::deal_river()
 {
 
     burn_card(deal_a_card()); // burn 
@@ -56,17 +56,17 @@ Card Game::deal_river()
 
     return c;
 }
-Card Game::deal_turn()
+Card CardGame::deal_turn()
 {
     return deal_river(); // code duplication is evil
 }
 
-const std::vector<Card>& Game::get_table()
+const std::vector<Card>& CardGame::get_table()
 {
     return m_table;
 };
 
-const std::string Game::get_table_str()
+const std::string CardGame::get_table_str()
 {
     std::ostringstream t;
     t << "| ";
@@ -77,12 +77,12 @@ const std::string Game::get_table_str()
     return t.str();
 }
 
-void Game::burn_card(const Card c)
+void CardGame::burn_card(const Card c)
 {
     m_burnt.push_back(c);
 }
 
-void Game::build_deck()
+void CardGame::build_deck()
 {
     for (int i=0; i<52; ++i){
         const Card card = {(int) i/4, i % 4 }; 
@@ -90,7 +90,7 @@ void Game::build_deck()
     }
 }
 
-const Card Game::deal_a_card()
+const Card CardGame::deal_a_card()
 {
     std::random_device gen;
     std::uniform_int_distribution<> dis(0, m_deck.size()-1);
@@ -104,7 +104,7 @@ const Card Game::deal_a_card()
 }
 
 
-std::vector<ScoredFiveCardsPair_t> Game::return_hand_scores()
+std::vector<ScoredFiveCardsPair_t> CardGame::return_hand_scores()
 {
     std::vector<ScoredFiveCardsPair_t> hand_scores;
     for (size_t i=0; i<m_hands.size(); i++)

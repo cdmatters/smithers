@@ -1,5 +1,5 @@
-#ifndef GAME 
-#define GAME
+#ifndef CARDGAME 
+#define CARDGAME
 
 #include <vector>
 
@@ -10,9 +10,9 @@
 
 namespace smithers{
 
-class Game{
+class CardGame{
     public:
-        Game();
+        CardGame();
 
         const std::vector<Hand>& deal_hands(int number_of_players);
 
