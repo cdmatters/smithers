@@ -137,35 +137,37 @@ void Smithers::publish_to_all(const Json::Value& json)
 }
 
 void Smithers::play_game()
-{    
-    CardGame new_game;
+{   
+    m2pp::connection conn("ID", "tcp://127.0.0.1:9900", "tcp://127.0.0.1:9901"); //will have to move
+    BettingGame betting_game(conn, m_publisher, m_players); 
+    CardGame card_game;
     int dealer_seat = player_utils::get_dealer(m_players);
     assign_seats(dealer_seat);
 
-    std::vector<Hand> hands = new_game.deal_hands( m_players.size() ); 
+    std::vector<Hand> hands = card_game.deal_hands( m_players.size() ); 
     
     publish_to_all( create_dealt_hands_message( hands, m_players, dealer_seat ) );
 
     //add blinds
     play_betting_round(3, 100, 0);
 
-    new_game.deal_flop();
-    publish_to_all( create_table_cards_message(new_game.get_table(), player_utils::get_pot_value_for_game(m_players) ) );
+    card_game.deal_flop();
+    publish_to_all( create_table_cards_message(card_game.get_table(), player_utils::get_pot_value_for_game(m_players) ) );
 
     play_betting_round(1, 100, 0);
 
-    new_game.deal_river();
-    publish_to_all( create_table_cards_message(new_game.get_table(), player_utils::get_pot_value_for_game(m_players) ) );
+    card_game.deal_river();
+    publish_to_all( create_table_cards_message(card_game.get_table(), player_utils::get_pot_value_for_game(m_players) ) );
 
     play_betting_round(1, 100, 0);
     
-    new_game.deal_turn();
-    publish_to_all( create_table_cards_message(new_game.get_table(), player_utils::get_pot_value_for_game(m_players) ) );
+    card_game.deal_turn();
+    publish_to_all( create_table_cards_message(card_game.get_table(), player_utils::get_pot_value_for_game(m_players) ) );
 
     play_betting_round(1, 100, 0);
 
 
-    std::vector<Result_t> results = award_winnings( new_game.return_hand_scores() );
+    std::vector<Result_t> results = award_winnings( card_game.return_hand_scores() );
     publish_to_all( create_results_message(results, m_players) );
 
     reset_and_move_dealer_to_next_player();

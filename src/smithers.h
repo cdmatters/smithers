@@ -3,6 +3,7 @@
 
 #include "player.h"
 #include "card_game.h"
+#include "betting_game.h"
 #include "messages.h"
 
 #include <zmq.hpp>
