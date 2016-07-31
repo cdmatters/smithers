@@ -2,8 +2,8 @@
 
 
 ##Tech:
-+ implemented in c++
-+ mongrel2 for server
++ implemented in c++ (for masochistic reasons)
++ mongrel2 for server, mongrel2-cpp bindings used for cpp
 + zeromq for interprocess communication
 
 ##Directory Structure:
@@ -11,39 +11,37 @@
 * **clients** - hosts some python implementations of a bare poker bot skeleton
 
 ##Requirements & Set Up:
-###Smithers Server (cpp)
+Batteries not included. Follow instructions to get your batteries.
 ```
 DEPENDENCY GRAPH:
 Smithers
-├── JsonCpp (step 2)
-├── ZMQCpp  (3)
-└── Mongrel2-Cpp (4)
-    ├── Json-c  # for now
-    └── ZMQCpp 
+├── jsoncpp (step 2)
+├── cppzmq  (3)
+└── mongrel2-cpp (4)
+    ├── json-c   # to be moved to jsoncpp
+    └── cppzmq 
 ```
 ----------
-#####1. Download Mongrel2
+####1. Install Mongrel2
 ```
     brew install mongrel2
 ```
 
-#####2. Download Json.Cpp & amalgamate into a file
+####2. Get Json.Cpp & generate compact header + source
 ```
     git clone https://github.com/open-source-parsers/jsoncpp/ jsoncpp
-    cd jsoncpp
-    python amalgamate.py   # generates jsoncpp/dist/ directory
-    cd ..
+    cd jsoncpp && python amalgamate.py && cd ..  
 ```
  
-#####3. Download ZeroMQ cpp bindings
+####3. Get ZeroMQ cpp bindings
 ```
     git clone https://github.com/zeromq/cppzmq cppzmq
 ```
 
-#####4. Download Mongrel2 cpp bindings & build library
+####4. Get Mongrel2 cpp bindings & build lib2mpp.a library
 
-- *Mongrel2 depend on json-c for now, not jsoncpp - instructions to install on page*
-- *Also requires the ZeroMQ header file* 
+- *follow build instructions on repo's readme*
+- *alse requires the cppzmq header file: zmq.hpp* 
 
 ```
    git clone https://github.com/condnsdmatters/mongrel2-cpp mongrel2-cpp
@@ -52,62 +50,62 @@ Smithers
    cd ..
 ```
 
-#####5. Make build & runtime dependencies available
-- Make the following tree
-- *You will need: `jsoncpp/dist/json.cpp` & `jsoncpp/dist/json/`*
-- *You will need: `cppzmq/zmq.hpp`*
-- *You will need: `mongrel2-cpp/lib2mpp.a` and `mongrel2-cpp/lib/m2pp\*.hpp` headers*
-
+####5. Make the dependencies available to Smithers
+- If you dont want to install all the above directories properly, Smithers will build with the following tree available in root.
 ```
-    ADD TO SMITHERS DIRECTORY
+    ADD TO SMITHERS DIRECTORY (with where to find files)
     logs/
     run/
+    obj/
+    └─── ext/
     external/
-    ├── include
-    │   ├── json
+    ├── include                
+    │   ├── json         - - - - - - - - -> jsoncpp/dist/json/
     │   │   ├── json-forwards.h
     │   │   └── json.h
-    |   ├── zmq.hpp
-    │   ├── m2pp.hpp
-    │   └── m2pp_internal.hpp
-    └── lib
-        └── libm2pp.a
-
+    |   ├── zmq.hpp      - - - - - - - - -> cppzmq/zmq.hpp
+    │   ├── m2pp.hpp     - - - - - - - - -> mongrel2-cpp/lib/m2pp.hpp
+    │   └── m2pp_internal.hpp  - - - - - -> mongrel2-cpp/lib/m2pp_internal.hpp
+    ├── lib
+    │   └── libm2pp.a    - - - - - - - - -> mongrel2-cpp/lib2mpp.a
+    └── src
+        └── jsoncpp.cpp  - - - - - - - - -> jsoncpp/dist/jsoncpp.cpp
 ```
 
 
-#####6. You're now ready to build Smithers. `make all`
-
-#####7. You are now ready to run Smithers.
+####6. Build Smithers!
+```
+make all
+```
 
 ##Running Smithers
-#####1. Generate the sqlite database that mongrel uses as its configuration
+####1. Generate the sqlite database that mongrel uses as its configuration
 
 ```
     m2sh load -config pbb_mongrel.conf -db pbb_mongrel.sqlite   
 ```
 
-#####2. Run the server  
+####2. Run the server  
 
 ```
     m2sh start -host localhost
 ```
 
-#####3. Run Smithers. Usage:
+####3. Run Smithers. Usage:
 
 ```
     `./smithers.tsk` # [to be filled in]
 ```
 
 ##Setting up & Running a Test Poker Bot
-#####1. Install Requirements
+####1. Install Requirements
 
 ```
     pip install pyzmq
     pip install # sort this out
 ```
 
-#####2. Run some bots
+####2. Run some bots
 
 ```
     python # [to be filled in] 
