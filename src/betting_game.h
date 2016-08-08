@@ -3,6 +3,8 @@
 
 #include "player.h"
 
+#include "messages.h"
+
 #include <zmq.hpp>
 #include <m2pp.hpp>
 #include <json/json.h>
@@ -25,8 +27,16 @@ class BettingGame{
         void publish_to_all(const Json::Value& json);
     private:
 
-        void play_betting_round(int first_to_play, int min_raise, int last_bet);
+        void run_betting_round(int first_to_play, int min_raise, int last_bet);
         
+        enum MoveType handle_move_from_player(Player& player, int min_raise, int last_bet);
+        enum MoveType process_bets(const Json::Value& move, Player& player, int& min_raise, int& last_bet);
+
+
+        
+        Json::Value listen_and_pull_from_queue(const std::string& player_name);
+
+
         m2pp::connection& m_listener;
         zmq::socket_t& m_publisher;
         std::vector<Player>& m_players;
