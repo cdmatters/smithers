@@ -50,7 +50,7 @@ Smithers
    cd ..
 ```
 
-####5. Make the dependencies available to Smithers
+####5. Make dependencies available to Smithers
 - If you dont want to install all the above directories properly, Smithers will build with the following tree available in root.
 ```
     ADD TO SMITHERS DIRECTORY (with where to find files)
@@ -94,7 +94,8 @@ make all
 ####3. Run Smithers. Usage:
 
 ```
-    `./smithers.tsk` # [to be filled in]
+    # sample ports. this needs to be cleared up. this works for the python test
+    ./smithers.tsk 'tcp://127.0.0.1:9999' 'tcp://127.0.0.1:9998'
 ```
 
 ##Setting up & Running a Test Poker Bot
@@ -105,10 +106,11 @@ make all
     pip install # sort this out
 ```
 
-####2. Run some bots
+####2. Run some bots (for now)
 
 ```
-    python # [to be filled in] 
+    # this sets up a game of 3 bots, one always RAISES, one CALLS, one FOLDS,
+    python step_through_test.py 
 ```
 
 ##Playing Poker
