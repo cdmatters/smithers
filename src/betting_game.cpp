@@ -11,6 +11,27 @@ BettingGame::BettingGame(m2pp::connection& listener, zmq::socket_t& publisher, s
 {
 }
 
+void BettingGame::run_pocket_betting_round()
+{
+    // add blinds
+    run_betting_round(3, 100, 0);
+}
+
+void BettingGame::run_flop_betting_round()
+{
+    run_betting_round(1, 100, 0);
+}
+
+void BettingGame::run_river_betting_round()
+{
+    run_betting_round(1, 100, 0);
+}
+
+void BettingGame::run_turn_betting_round()
+{
+    run_betting_round(1, 010, 0);
+}
+
 void BettingGame::run_betting_round(int first_betting_seat, int min_raise, int last_bet)
 {
     int next_to_play_index = player_utils::get_dealer(m_players);
@@ -22,12 +43,11 @@ void BettingGame::run_betting_round(int first_betting_seat, int min_raise, int l
 
     // **TBD** Do we need these names?
     std::string next_to_play_name = m_players[next_to_play_index].m_name;
-    std::string last_to_raise_name = next_to_play_name;
-
+    std::string last_to_raise_name = m_players[next_to_play_index].m_name;
     do 
     {
         // 1. Find next to play.        
-        Player next_player = m_players[next_to_play_index];
+        Player& next_player = m_players[next_to_play_index];
 
         // 2. Get a move & process it.
         enum MoveType result = handle_move_from_player( next_player, min_raise, last_bet );
@@ -46,7 +66,7 @@ void BettingGame::run_betting_round(int first_betting_seat, int min_raise, int l
         
         // 5. Move to next player
         next_to_play_index = player_utils::get_next_to_play(m_players,  next_to_play_index);
-        std::string next_to_play_name = m_players[next_to_play_index].m_name;
+        next_to_play_name = m_players[next_to_play_index].m_name;
 
     } while (last_to_raise_name != next_to_play_name);
 }
@@ -55,7 +75,10 @@ Json::Value BettingGame::listen_and_pull_from_queue(const std::string& player_na
 {
     while (true) // timer before sending re-request
     {
+        std::cout << "pulling message from listener..." << std::endl; 
         m2pp::request req = m_listener.recv();
+        std::cout << req.body << std::endl;
+
         if (req.disconnect)
         {
             continue;
@@ -64,11 +87,11 @@ Json::Value BettingGame::listen_and_pull_from_queue(const std::string& player_na
         {
             Json::Value root;
             Json::Reader reader;
-            bool was_successs = reader.parse(req.body, root);
-            
+            bool was_success = reader.parse(req.body, root);
+            std::cout << req.body << std::endl;
             m_listener.reply_http(req, "{}"); // should send back before the parse status
             
-            if  (!was_successs || root.get("name", "").asString() != player_name)
+            if  (!was_success || root.get("name", "").asString() != player_name)
             {
                 continue;
             }
@@ -143,12 +166,17 @@ enum MoveType BettingGame::process_bets(const Json::Value& move,
 
 }
 
+
+
+
+
 enum MoveType BettingGame::handle_move_from_player(Player& player, int min_raise, int last_bet)
 {
-Json::Value move = listen_and_pull_from_queue(player.m_name);
-enum MoveType result = process_bets(move, player, min_raise, last_bet);
-
-return result;     
+    publish_to_all(create_move_request(player, player_utils::get_pot_value_for_game(m_players), last_bet));
+    Json::Value move = listen_and_pull_from_queue(player.m_name);
+    enum MoveType result = process_bets(move, player, min_raise, last_bet);
+    
+    return result;     
 }
 
 void BettingGame::publish_to_all(const std::string& message)
@@ -163,5 +191,9 @@ void BettingGame::publish_to_all(const Json::Value& json)
     message << json;
     publish_to_all(message.str());
 }
+
+
+
+
 
 } // smithers
