@@ -303,12 +303,14 @@ void Smithers::reset_and_move_dealer_to_next_player()
     int dealer = player_utils::get_dealer(m_players);
     for (size_t i=0; i<m_players.size(); ++i){
         m_players[i].m_in_play_this_round = true;
+        m_players[i].m_all_in_this_round = false;
     }
     int next_dealer = player_utils::get_next_to_play(m_players, dealer);
     std::cout<< dealer<< " "<< next_dealer << std::endl;
 
     m_players[dealer].m_is_dealer = false;
     m_players[next_dealer].m_is_dealer = true;
+
 
 };
 

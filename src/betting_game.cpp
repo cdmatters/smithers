@@ -99,7 +99,7 @@ void BettingGame::run_betting_round(int first_betting_seat, int min_raise, int l
 
     if ( to_play_seat == player_utils::get_next_to_play(m_players,  to_play_seat))
     {
-        return; //everyone's all in
+        return; //everyone's all in or one player left
     }
 
     int last_to_raise_seat = to_play_seat;
@@ -128,12 +128,8 @@ void BettingGame::run_betting_round(int first_betting_seat, int min_raise, int l
         // 5. Get Next Player
         to_play_seat = player_utils::get_next_to_play(m_players,  to_play_seat);
     
-        // 6. Last Player Stand Don't Get A Move.
-        if ( to_play_seat == player_utils::get_next_to_play(m_players,  to_play_seat))
-        {
-            break; 
-        }
-    } while (to_play_seat != last_to_raise_seat);
+    } while (to_play_seat != last_to_raise_seat &&
+            player_utils::count_active_players_in_game(m_players) != 1);
 
     end_round_betting(); 
 }
