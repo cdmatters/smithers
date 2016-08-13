@@ -19,10 +19,12 @@ namespace smithers{
     } Result_t;
     
     enum MoveType {
+            ERROR = -1,
             RAISE,
             CALL,
             FOLD,
-            ALL_IN
+            ALL_IN,
+
     };
  
     Json::Value create_registered_message( const Player& player );
