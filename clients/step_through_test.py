@@ -44,15 +44,17 @@ def subscribe_me(player_list):
         message = socket.recv()
         print message
         json_message = json.loads(message);
-        raw_input(" message loaded ")
+        #raw_input(" message loaded ")
         if json_message["type"]=='MOVE_REQUEST' and json_message["name"] in names:
             player_name = json_message["name"]
-            raw_input("move request: %s" % player_name) 
+            print ("move request: %s" % player_name) 
+            m = raw_input("MOVE: ")
+            a = raw_input("AMOUNT: ")
             print "posting message"
             next_move = {
                 'name':player_name,
-                'move':names[player_name]["move"],
-                'chips':names[player_name]["amount"]
+                'move':m if m else names[player_name]["move"],
+                'chips':int(a) if a else names[player_name]["amount"]
             }
             r = requests.post( 'http://localhost:6767/move/', json=next_move )
        

@@ -86,9 +86,10 @@ Json::Value create_move_request(const Player& player, int pot, int min_raise, in
     root["type"] = "MOVE_REQUEST";
     root["pot"] = pot;
     root["name"] = player.m_name;
-    root["min_raise"] = min_raise;
-    root["last_bet"] = last_bet;
-    root["chips"] = player.m_chips - player.m_chips_this_round - player.m_chips_this_game;
+    root["raise"] = last_bet + min_raise;
+    root["call"] = last_bet;
+    root["chips"] = player.m_chips - player.m_chips_this_round - player.m_chips_this_game; 
+    root["current_bet"] =  player.m_chips_this_round;
     return root;
 }
 

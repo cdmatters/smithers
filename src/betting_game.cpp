@@ -97,8 +97,12 @@ void BettingGame::run_betting_round(int first_betting_seat, int min_raise, int l
         to_play_seat = player_utils::get_next_to_play(m_players,  to_play_seat);
     }
 
-    int last_to_raise_seat = to_play_seat;
+    if ( to_play_seat == player_utils::get_next_to_play(m_players,  to_play_seat))
+    {
+        return; //everyone's all in
+    }
 
+    int last_to_raise_seat = to_play_seat;
     do 
     {   
         // 1. Get Player 
@@ -117,12 +121,18 @@ void BettingGame::run_betting_round(int first_betting_seat, int min_raise, int l
         if (this_move.last_bet > last_bet)
         {
             last_bet = this_move.last_bet;
+            min_raise = this_move.new_min_raise;
             last_to_raise_seat = to_play_seat; 
         }
         
         // 5. Get Next Player
         to_play_seat = player_utils::get_next_to_play(m_players,  to_play_seat);
-
+    
+        // 6. Last Player Stand Don't Get A Move.
+        if ( to_play_seat == player_utils::get_next_to_play(m_players,  to_play_seat))
+        {
+            break; 
+        }
     } while (to_play_seat != last_to_raise_seat);
 
     end_round_betting(); 
@@ -132,11 +142,20 @@ Json::Value BettingGame::get_players_move(const Player& player,
                                                 int min_raise,
                                                 int last_bet)
 {
-    // TBD: retry on failure?
-    Json::Value move_request_message = create_move_request(player, get_pot_value(), min_raise, last_bet);
-    publish_to_all(move_request_message);
+    Json::Value move;
+    for (int retries = 0; retries < 3; retries++)
+    {
+        Json::Value move_request_message = create_move_request(player, get_pot_value(), min_raise, last_bet);
+        publish_to_all(move_request_message);
 
-    Json::Value move = listen_and_pull_from_queue(player.m_name);
+        move = listen_and_pull_from_queue(player.m_name);
+        if (move.get("type", "").asString() != "ERROR")
+        {
+            break;
+        }
+
+        std::cout << "Timeout: "<< retries<<" resending message to: " << player.m_name << std::endl;
+    }
     return move;
 }
 
@@ -146,7 +165,7 @@ PlayerMove_t BettingGame::process_move(const Json::Value& move,
                                     int last_bet) const// change these reference
 {
     std::string this_move = move.get("move", "").asString();
-    int this_bet = move.get("chips", "0").asInt();
+    int this_bet = move.get("chips", 0).asInt();
     int available_chips = player.m_chips - player.m_chips_this_game;
 
     if (this_move == "RAISE_TO" or this_move == "RAISE")
@@ -162,6 +181,7 @@ PlayerMove_t BettingGame::process_move(const Json::Value& move,
         return process_a_fold_bet(min_raise, last_bet);
     }
 
+    std::cout<< "WARNING: Default \"FOLD\" for " << player.m_name << std::endl;
     return process_a_fold_bet(min_raise, last_bet);
 }
 
@@ -175,7 +195,7 @@ void BettingGame::do_players_move(Player& player, const PlayerMove_t& move)
     {
         if (move.move_type==ALL_IN)
         {
-            player.m_in_play_this_round = true;
+            player.m_all_in_this_round = true;
         }
         player.m_chips_this_round = move.amount;
     }
@@ -194,11 +214,11 @@ void BettingGame::end_round_betting()
 
 Json::Value BettingGame::listen_and_pull_from_queue(const std::string& player_name)
 {
-    while (true) // timer before sending re-request
+    int attempts = 0 ;
+    while (attempts < 400) // TIMEOUTS A PROBLEM IF LISTENER BLOCKS
     {
-        std::cout << "pulling message from listener..." << std::endl; 
+        std::cout << "pulling message from listener... WANT: "<< player_name << std::endl; 
         m2pp::request req = m_listener.recv();
-        std::cout << req.body << std::endl;
 
         if (req.disconnect)
         {
@@ -206,6 +226,8 @@ Json::Value BettingGame::listen_and_pull_from_queue(const std::string& player_na
         }
         else
         {
+            std::cout << ++attempts <<": "<< req.body << std::endl;
+
             Json::Value root;
             Json::Reader reader;
             bool was_success = reader.parse(req.body, root);
@@ -219,7 +241,14 @@ Json::Value BettingGame::listen_and_pull_from_queue(const std::string& player_na
 
             return root; 
         }
+
     }
+    std::cout << "NO MESSAGE FROM: "<< player_name 
+              << " IN: " << attempts << " MESSAGES" <<std::endl;
+    Json::Value timeout; 
+    timeout["type"] = "ERROR";
+    timeout["message"] = "TIMEOUT";
+    return timeout;
 }
 
 void BettingGame::run_pocket_betting_round()

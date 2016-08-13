@@ -15,7 +15,9 @@ int get_dealer(const std::vector<Player>& players)
 int get_next_to_play(const std::vector<Player>& players, int seat)
 {
     int next = (seat + 1) % players.size();
-    if (players[next].m_in_play && players[next].m_in_play_this_round)
+    if (players[next].m_in_play 
+        && players[next].m_in_play_this_round 
+        && !players[next].m_all_in_this_round)
     {
         return next;
     }
@@ -28,6 +30,13 @@ int get_next_to_play(const std::vector<Player>& players, int seat)
 int count_active_players(const std::vector<Player>& players)
 {
     return std::count_if(players.cbegin(), players.cend(), [](const Player p){return p.m_chips>0;});
+};
+
+int count_active_players_in_game(const std::vector<Player>& players)
+{
+    return std::count_if(players.cbegin(), players.cend(), [](const Player p){return p.m_in_play==true &&
+                                                                                p.m_in_play_this_round==true &&
+                                                                                p.m_all_in_this_round == false;});
 };
 
 // ONE LINERS -> see std::sum when you get internet again...
@@ -46,9 +55,12 @@ int get_pot_value_for_game(const std::vector<Player>& players)
     for (std::vector<Player>::const_iterator c_it = players.cbegin(); c_it != players.cend(); c_it++)
     {
         sum += c_it->m_chips_this_game;
+        sum += c_it->m_chips_this_round;
     }
     return sum;
 };
+
+
 int get_all_chips_at_table(const std::vector<Player>& players) 
 {
     int sum = 0; 
