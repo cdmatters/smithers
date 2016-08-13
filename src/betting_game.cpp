@@ -133,7 +133,7 @@ Json::Value BettingGame::get_players_move(const Player& player,
                                                 int last_bet)
 {
     // TBD: retry on failure?
-    Json::Value move_request_message = create_move_request(player, get_pot_value(), last_bet);
+    Json::Value move_request_message = create_move_request(player, get_pot_value(), min_raise, last_bet);
     publish_to_all(move_request_message);
 
     Json::Value move = listen_and_pull_from_queue(player.m_name);

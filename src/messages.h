@@ -35,7 +35,7 @@ namespace smithers{
 
     Json::Value create_table_cards_message( const std::vector<Card>& cards, int pot );
 
-    Json::Value create_move_request( const Player& player, int pot, int last_bet );
+    Json::Value create_move_request( const Player& player, int pot, int min_raise, int last_bet );
     
     Json::Value create_tournament_winner_message( const std::string& winner, int pot);
 
