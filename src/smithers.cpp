@@ -219,7 +219,7 @@ std::vector<Result_t> Smithers::award_winnings(const std::vector<ScoredFiveCards
 
         for (size_t p=0; p<m_players.size(); p++){
             int amount = (m_players[p].m_chips_this_game >= winners_bet) ? 
-                            winners_bet : m_players[p].m_chips_this_round;
+                            winners_bet : m_players[p].m_chips_this_game;
             results[r].winnings += amount;
             m_players[p].m_chips_this_game -= amount;
             m_players[p].m_chips -= amount;

@@ -209,7 +209,6 @@ void BettingGame::end_round_betting()
     {
         it->m_chips_this_game += it->m_chips_this_round; 
         it->m_chips_this_round = 0;
-
     }
 }
 
