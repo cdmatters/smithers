@@ -138,6 +138,8 @@ void Smithers::publish_to_all(const Json::Value& json)
 
 void Smithers::play_game()
 {   
+    int min_raise = 500;
+
     m2pp::connection conn("ID", "tcp://127.0.0.1:9900", "tcp://127.0.0.1:9901"); //will have to move
     BettingGame betting_game(conn, m_publisher, m_players); 
     CardGame card_game;
@@ -148,22 +150,19 @@ void Smithers::play_game()
     
     publish_to_all( create_dealt_hands_message( hands, m_players, dealer_seat ) );
 
-    // 1. The pocket
-    betting_game.run_pocket_betting_round();
+    betting_game.run_pocket_betting_round(min_raise);
     
     card_game.deal_flop();
     publish_to_all( create_table_cards_message(card_game.get_table(), player_utils::get_pot_value_for_game(m_players) ) );
-    betting_game.run_flop_betting_round();
+    betting_game.run_flop_betting_round(min_raise);
 
     card_game.deal_river();
     publish_to_all( create_table_cards_message(card_game.get_table(), player_utils::get_pot_value_for_game(m_players) ) );
-    betting_game.run_river_betting_round();
-    
+    betting_game.run_turn_betting_round(min_raise);
     
     card_game.deal_turn();
     publish_to_all( create_table_cards_message(card_game.get_table(), player_utils::get_pot_value_for_game(m_players) ) );
-    betting_game.run_turn_betting_round();
-
+    betting_game.run_river_betting_round(min_raise);
 
     std::vector<Result_t> results = award_winnings( card_game.return_hand_scores() );
     publish_to_all( create_results_message(results, m_players) );
@@ -310,8 +309,6 @@ void Smithers::reset_and_move_dealer_to_next_player()
 
     m_players[dealer].m_is_dealer = false;
     m_players[next_dealer].m_is_dealer = true;
-
-
 };
 
 

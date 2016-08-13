@@ -1,3 +1,4 @@
+#Smithers
 ***Smithers is a poker server to help all your rich poker bots lose all their money together.***
 
 

@@ -25,10 +25,10 @@ class BettingGame{
     public:
         BettingGame(m2pp::connection& m_listener, zmq::socket_t& m_publisher, std::vector<Player>& m_players);
 
-        void run_pocket_betting_round();
-        void run_flop_betting_round();
-        void run_turn_betting_round();
-        void run_river_betting_round();
+        void run_pocket_betting_round(int min_raise);
+        void run_flop_betting_round(int min_raise);
+        void run_turn_betting_round(int min_raise);
+        void run_river_betting_round(int min_raise);
 
         void publish_to_all(const std::string& message);
         void publish_to_all(const Json::Value& json);
@@ -45,6 +45,7 @@ class BettingGame{
 
         void end_round_betting();
 
+        void do_blinds(int little_blind, int big_blind);
 
         Json::Value listen_and_pull_from_queue(const std::string& player_name);
 

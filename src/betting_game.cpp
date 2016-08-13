@@ -105,8 +105,13 @@ void BettingGame::run_betting_round(int first_betting_seat, int min_raise, int l
     int last_to_raise_seat = to_play_seat;
     do 
     {   
-        // 1. Get Player 
+        // 1. Get (proper) Player 
         Player& next_player = m_players[to_play_seat];
+        if (next_player.m_all_in_this_round)
+        {
+            to_play_seat = player_utils::get_next_to_play(m_players,  to_play_seat);
+            continue;
+        }
         
         // 2. Get Move & Process it
         const Json::Value raw_move = get_players_move( next_player, min_raise, last_bet );
@@ -128,8 +133,8 @@ void BettingGame::run_betting_round(int first_betting_seat, int min_raise, int l
         // 5. Get Next Player
         to_play_seat = player_utils::get_next_to_play(m_players,  to_play_seat);
     
-    } while (to_play_seat != last_to_raise_seat &&
-            player_utils::count_active_players_in_game(m_players) != 1);
+    } while (to_play_seat != last_to_raise_seat &&  // normal round of betting
+            player_utils::count_active_players_in_game(m_players) != 1); // everyone folded
 
     end_round_betting(); 
 }
@@ -247,25 +252,54 @@ Json::Value BettingGame::listen_and_pull_from_queue(const std::string& player_na
     return timeout;
 }
 
-void BettingGame::run_pocket_betting_round()
+void BettingGame::do_blinds(int little_blind, int big_blind)
 {
-    // add blinds
-    run_betting_round(3, 100, 0);
+    int dealer = player_utils::get_dealer(m_players);
+    int lb_player = player_utils::get_next_to_play(m_players, dealer);
+    int bb_player = player_utils::get_next_to_play(m_players, lb_player);
+
+    if (m_players[lb_player].m_chips <= little_blind)
+    {
+        m_players[lb_player].m_chips_this_round = m_players[lb_player].m_chips;
+        m_players[lb_player].m_all_in_this_round =  true;
+    }
+    else
+    {
+         m_players[lb_player].m_chips_this_round = little_blind;
+    }
+
+    if (m_players[bb_player].m_chips <= big_blind)
+    {
+        m_players[bb_player].m_chips_this_round = m_players[bb_player].m_chips;
+        m_players[bb_player].m_all_in_this_round =  true;
+    }
+    else
+    {
+         m_players[bb_player].m_chips_this_round = big_blind;
+    }
+
 }
 
-void BettingGame::run_flop_betting_round()
+void BettingGame::run_pocket_betting_round(int min_raise)
 {
-    run_betting_round(1, 100, 0);
+    int little_blind = (int) (min_raise/2);
+    do_blinds(little_blind, min_raise);
+    run_betting_round(3, min_raise, min_raise);
 }
 
-void BettingGame::run_river_betting_round()
+void BettingGame::run_flop_betting_round(int min_raise)
 {
-    run_betting_round(1, 100, 0);
+    run_betting_round(1, min_raise, 0);
 }
 
-void BettingGame::run_turn_betting_round()
+void BettingGame::run_river_betting_round(int min_raise)
 {
-    run_betting_round(1, 100, 0);
+    run_betting_round(1, min_raise, 0);
+}
+
+void BettingGame::run_turn_betting_round(int min_raise)
+{
+    run_betting_round(1, min_raise, 0);
 }
 
 int BettingGame::get_pot_value() const

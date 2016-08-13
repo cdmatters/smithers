@@ -48,8 +48,9 @@ def subscribe_me(player_list):
         if json_message["type"]=='MOVE_REQUEST' and json_message["name"] in names:
             player_name = json_message["name"]
             print ("move request: %s" % player_name) 
-            m = raw_input("MOVE: ")
-            a = raw_input("AMOUNT: ")
+            a, m = "",""
+            # m = raw_input("MOVE: ")
+            # a = raw_input("AMOUNT: ")
             print "posting message"
             next_move = {
                 'name':player_name,

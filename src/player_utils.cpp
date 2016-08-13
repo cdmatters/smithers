@@ -16,8 +16,7 @@ int get_next_to_play(const std::vector<Player>& players, int seat)
 {
     int next = (seat + 1) % players.size();
     if (players[next].m_in_play 
-        && players[next].m_in_play_this_round 
-        && !players[next].m_all_in_this_round)
+        && players[next].m_in_play_this_round)
     {
         return next;
     }
