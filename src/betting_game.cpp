@@ -6,7 +6,7 @@ namespace smithers{
 
 namespace {
 
-PlayerMove_t process_raise_bet(int this_bet, int available_chips,
+PlayerMove_t process_a_raise_bet(int this_bet, int available_chips,
                                 int min_raise, int last_bet)
 {
     PlayerMove_t processed_move = {ERROR,-1,-1,-1};
@@ -56,7 +56,7 @@ PlayerMove_t process_raise_bet(int this_bet, int available_chips,
     return processed_move;
 }
 
-PlayerMove_t process_call_bet(int available_chips, int min_raise, int last_bet)
+PlayerMove_t process_a_call_bet(int available_chips, int min_raise, int last_bet)
 {
     if (last_bet >= available_chips)
     {
@@ -72,16 +72,13 @@ PlayerMove_t process_call_bet(int available_chips, int min_raise, int last_bet)
     }
 }
 
-PlayerMove_t process_fold_bet(int min_raise, int last_bet)
+PlayerMove_t process_a_fold_bet(int min_raise, int last_bet)
 {
     PlayerMove_t processed_move = {FOLD, 0, last_bet, min_raise};
     return processed_move;
 } 
 
 } // close anon namespace
-
-
-
 
 
 BettingGame::BettingGame(m2pp::connection& listener, zmq::socket_t& publisher, std::vector<Player>& players)
@@ -91,63 +88,108 @@ BettingGame::BettingGame(m2pp::connection& listener, zmq::socket_t& publisher, s
 {
 }
 
-void BettingGame::run_pocket_betting_round()
-{
-    // add blinds
-    run_betting_round(3, 100, 0);
-}
-
-void BettingGame::run_flop_betting_round()
-{
-    run_betting_round(1, 100, 0);
-}
-
-void BettingGame::run_river_betting_round()
-{
-    run_betting_round(1, 100, 0);
-}
-
-void BettingGame::run_turn_betting_round()
-{
-    run_betting_round(1, 100, 0);
-}
-
 void BettingGame::run_betting_round(int first_betting_seat, int min_raise, int last_bet)
 {
-    int next_to_play_index = player_utils::get_dealer(m_players);
-    
+    // get nth place to left of dealer
+    int to_play_seat = player_utils::get_dealer(m_players);
     for (int i=0; i<first_betting_seat; i++)
-    { // ie 3rd from dealer with blinds, 1 if not.
-        next_to_play_index = player_utils::get_next_to_play(m_players,  next_to_play_index);
+    {
+        to_play_seat = player_utils::get_next_to_play(m_players,  to_play_seat);
     }
 
-    std::string next_to_play_name = m_players[next_to_play_index].m_name;
-    std::string last_to_raise_name = next_to_play_name;
+    int last_to_raise_seat = to_play_seat;
+
     do 
-    {
-        // 1. Find next to play.        
-        Player& next_player = m_players[next_to_play_index];
-
-        // 2. Get a move & process it.
-        const PlayerMove_t this_move = handle_move_from_player( next_player, min_raise, last_bet );
-
-        // 3. Tell people about it        
-        publish_to_all(create_move_message(next_player, this_move.move_type, next_player.m_chips_this_round));
+    {   
+        // 1. Get Player 
+        Player& next_player = m_players[to_play_seat];
         
-        // 4. Adjust last to bet & bet amount
-        if ( (this_move.move_type == ALL_IN && 
-                  next_player.m_chips_this_round > last_bet)
-            || this_move.move_type == RAISE)
+        // 2. Get Move & Process it
+        const Json::Value raw_move = get_players_move( next_player, min_raise, last_bet );
+        const PlayerMove_t this_move = process_move(raw_move, next_player, min_raise, last_bet);
+        do_players_move(next_player, this_move);
+        
+        // 3. Tell People
+        Json::Value move_message = create_move_message(next_player, this_move.move_type, this_move.amount);
+        publish_to_all(move_message);
+        
+        // 4. Is She Last to Raise?
+        if (this_move.last_bet > last_bet)
         {
-            last_bet = next_player.m_chips_this_round;
-            last_to_raise_name = next_player.m_name; 
+            last_bet = this_move.last_bet;
+            last_to_raise_seat = to_play_seat; 
         }
         
-        // 5. Move to next player
-        next_to_play_index = player_utils::get_next_to_play(m_players,  next_to_play_index);
-        next_to_play_name = m_players[next_to_play_index].m_name;
+        // 5. Get Next Player
+        to_play_seat = player_utils::get_next_to_play(m_players,  to_play_seat);
 
-    } while (last_to_raise_name != next_to_play_name);
+    } while (to_play_seat != last_to_raise_seat);
+
+    end_round_betting(); 
+}
+
+Json::Value BettingGame::get_players_move(const Player& player,
+                                                int min_raise,
+                                                int last_bet)
+{
+    // TBD: retry on failure?
+    Json::Value move_request_message = create_move_request(player, get_pot_value(), last_bet);
+    publish_to_all(move_request_message);
+
+    Json::Value move = listen_and_pull_from_queue(player.m_name);
+    return move;
+}
+
+PlayerMove_t BettingGame::process_move(const Json::Value& move,
+                                    const Player& player,
+                                    int min_raise,
+                                    int last_bet) const// change these reference
+{
+    std::string this_move = move.get("move", "").asString();
+    int this_bet = move.get("chips", "0").asInt();
+    int available_chips = player.m_chips - player.m_chips_this_game;
+
+    if (this_move == "RAISE_TO" or this_move == "RAISE")
+    {
+        return process_a_raise_bet(this_bet, available_chips, min_raise, last_bet);
+    }
+    else if (this_move == "CALL")
+    {
+        return process_a_call_bet(available_chips, min_raise, last_bet);
+    }
+    else if (this_move == "FOLD")
+    {
+        return process_a_fold_bet(min_raise, last_bet);
+    }
+
+    return process_a_fold_bet(min_raise, last_bet);
+}
+
+void BettingGame::do_players_move(Player& player, const PlayerMove_t& move)
+{
+    if (move.move_type==FOLD)
+    {
+        player.m_in_play_this_round = false;
+    }
+    else 
+    {
+        if (move.move_type==ALL_IN)
+        {
+            player.m_in_play_this_round = true;
+        }
+        player.m_chips_this_round = move.amount;
+    }
+}
+
+void BettingGame::end_round_betting()
+{
+    // end by transferring round bets to game bets
+    for (std::vector<Player>::iterator it = m_players.begin(); it != m_players.end(); it++)
+    {
+        it->m_chips_this_game += it->m_chips_this_round; 
+        it->m_chips_this_round = 0;
+
+    }
 }
 
 Json::Value BettingGame::listen_and_pull_from_queue(const std::string& player_name)
@@ -180,79 +222,31 @@ Json::Value BettingGame::listen_and_pull_from_queue(const std::string& player_na
     }
 }
 
-enum MoveType BettingGame::process_bets(const Json::Value& move,
-                                    Player& player,
-                                    int& min_raise,
-                                    int& last_bet)// change these reference
+void BettingGame::run_pocket_betting_round()
 {
-    std::string this_move = move.get("move", "").asString();
-    int this_bet = move.get("chips", "0").asInt();
-
-    // test valid inputs here: could do this in a separate function
-
-    // ERROR HANDLING:
-    // 1. Bets more than available chips -> ALL_IN
-    if (this_bet + player.m_chips_this_game >=  player.m_chips )
-    {
-        player.m_chips_this_round = player.m_chips - player.m_chips_this_game;
-        return ALL_IN;
-    }
-
-    int available_chips = player.m_chips - player.m_chips_this_game;
-    if (this_move == "RAISE_TO" or this_move == "RAISE")
-    {
-        return process_raise_bet(this_bet, available_chips, min_raise, last_bet).move_type;
-    }
-    else if (this_move == "CALL")
-    {
-        return process_call_bet(available_chips, min_raise, last_bet).move_type;
-    }
-    else if (this_move == "FOLD")
-    {
-        return process_fold_bet(min_raise, last_bet).move_type;
-    }
-    else
-    {
-        player.m_in_play_this_round = false;
-        return FOLD;
-    }
-
-    return FOLD; // no compiler warnings
-
+    // add blinds
+    run_betting_round(3, 100, 0);
 }
 
-
-// enum MoveType BettingGame::handle_move_from_player(Player& player, int min_raise, int last_bet)
-// {
-//     publish_to_all(create_move_request(player, player_utils::get_pot_value_for_game(m_players), last_bet));
-//     Json::Value move = listen_and_pull_from_queue(player.m_name);
-//     enum MoveType result = process_bets(move, player, min_raise, last_bet);
-    
-//     return result;     
-// }
-
-
-
-
-
-PlayerMove_t BettingGame::handle_move_from_player( Player& player,
-                                                        int min_raise,
-                                                        int last_bet)
+void BettingGame::run_flop_betting_round()
 {
-    publish_to_all(create_move_request(player, player_utils::get_pot_value_for_game(m_players), last_bet));
-    Json::Value move = listen_and_pull_from_queue(player.m_name);
-    
-    enum MoveType result = process_bets(move, player, min_raise, last_bet);
-
-    PlayerMove_t processed_move = { 
-        result,
-        player.m_chips_this_round,
-        last_bet,
-        min_raise,
-    };
-    return processed_move;
+    run_betting_round(1, 100, 0);
 }
 
+void BettingGame::run_river_betting_round()
+{
+    run_betting_round(1, 100, 0);
+}
+
+void BettingGame::run_turn_betting_round()
+{
+    run_betting_round(1, 100, 0);
+}
+
+int BettingGame::get_pot_value() const
+{
+    return player_utils::get_pot_value_for_game(m_players);
+}
 
 void BettingGame::publish_to_all(const std::string& message)
 {

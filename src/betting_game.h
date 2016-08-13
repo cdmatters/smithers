@@ -33,21 +33,20 @@ class BettingGame{
         void publish_to_all(const std::string& message);
         void publish_to_all(const Json::Value& json);
 
+        int get_pot_value() const;
+
     private:
 
         void run_betting_round(int first_to_play, int min_raise, int last_bet);
         
-        enum MoveType process_bets(const Json::Value& move, Player& player, int min_raise, int last_bet);
+        Json::Value get_players_move(const Player& player, int min_raise, int last_bet);
+        PlayerMove_t process_move(const Json::Value& move, const Player& player, int min_raise, int last_bet) const;
+        void do_players_move(Player& player, const PlayerMove_t& move);
 
-        PlayerMove_t handle_move_from_player( Player& player,
-                                                        int min_raise,
-                                                        int last_bet);
+        void end_round_betting();
 
 
-        
         Json::Value listen_and_pull_from_queue(const std::string& player_name);
-
-      
 
         m2pp::connection& m_listener;
         zmq::socket_t& m_publisher;
