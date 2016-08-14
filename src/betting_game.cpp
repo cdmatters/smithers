@@ -120,23 +120,22 @@ void BettingGame::run_betting_round(int first_betting_seat, int min_raise, int l
         do_players_move(next_player, this_move);
         
         // 3. Tell People
-        Json::Value move_message = create_move_message(next_player, this_move.move_type, this_move.amount);
+        Json::Value move_message = create_move_message(next_player, this_move.move_type, this_move.amount, false);
         publish_to_all(move_message);
         
-        // 4. Is She Last to Raise?
+        // 4.1 Is She Last to Raise?
         if (this_move.last_bet > last_bet)
         {
             last_bet = this_move.last_bet;
             min_raise = this_move.new_min_raise;
             last_to_raise_seat = to_play_seat; 
-        }
-
+        } //4.2 Has the first player folded?
         if (this_move.move_type==FOLD && last_to_raise_seat==to_play_seat)
         {
             last_to_raise_seat = player_utils::get_next_to_play(m_players,  to_play_seat);
         }
         
-        // 5. Get Next Player
+        // 5. Get next player
         to_play_seat = player_utils::get_next_to_play(m_players,  to_play_seat);
     
     } while (to_play_seat != last_to_raise_seat &&  // normal round of betting
@@ -263,25 +262,36 @@ void BettingGame::do_blinds(int little_blind, int big_blind)
     int lb_player = player_utils::get_next_to_play(m_players, dealer);
     int bb_player = player_utils::get_next_to_play(m_players, lb_player);
 
+    Json::Value lb_move;
     if (m_players[lb_player].m_chips <= little_blind)
     {
         m_players[lb_player].m_chips_this_round = m_players[lb_player].m_chips;
         m_players[lb_player].m_all_in_this_round =  true;
+        lb_move = create_move_message(m_players[lb_player], ALL_IN, m_players[lb_player].m_chips_this_round, true);
+
     }
     else
     {
-         m_players[lb_player].m_chips_this_round = little_blind;
+        m_players[lb_player].m_chips_this_round = little_blind;
+        lb_move = create_move_message(m_players[lb_player], RAISE, little_blind, true);
     }
+    publish_to_all(lb_move);
 
+    Json::Value bb_move;
     if (m_players[bb_player].m_chips <= big_blind)
     {
         m_players[bb_player].m_chips_this_round = m_players[bb_player].m_chips;
         m_players[bb_player].m_all_in_this_round =  true;
+        bb_move = create_move_message(m_players[bb_player], ALL_IN, m_players[bb_player].m_chips_this_round, true);
+
     }
     else
     {
-         m_players[bb_player].m_chips_this_round = big_blind;
+        m_players[bb_player].m_chips_this_round = big_blind;
+        bb_move = create_move_message(m_players[bb_player], RAISE, big_blind, true);
+
     }
+    publish_to_all(bb_move);
 
 }
 

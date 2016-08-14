@@ -39,7 +39,7 @@ namespace smithers{
     
     Json::Value create_tournament_winner_message( const std::string& winner, int pot);
 
-    Json::Value create_move_message(const Player& player, enum MoveType move, int amount);
+    Json::Value create_move_message(const Player& player, enum MoveType move, int amount, bool is_blind);
     
     Json::Value create_results_message(const std::vector<Result_t>& results,
                                        const std::vector<Player>& players );

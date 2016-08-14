@@ -93,7 +93,7 @@ Json::Value create_move_request(const Player& player, int pot, int min_raise, in
     return root;
 }
 
-Json::Value create_move_message(const Player& player, enum MoveType move, int amount)
+Json::Value create_move_message(const Player& player, enum MoveType move, int amount, bool is_blind)
 {
     std::string move_string;
     switch (move)
@@ -118,7 +118,7 @@ Json::Value create_move_message(const Player& player, enum MoveType move, int am
 
     Json::Value root;
     
-    root["type"] = "MOVE";
+    root["type"] = is_blind? "BLIND":"MOVE";
     root["move"] = move_string;
     root["bet"] = amount;
     root["name"] = player.m_name;
