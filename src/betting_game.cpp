@@ -97,8 +97,9 @@ void BettingGame::run_betting_round(int first_betting_seat, int min_raise, int l
         to_play_seat = player_utils::get_next_to_play(m_players,  to_play_seat);
     }
 
-    if ( to_play_seat == player_utils::get_next_to_play(m_players,  to_play_seat))
+    if (player_utils::count_not_all_in_active_players_in_game(m_players) <= 1)
     {
+        end_round_betting();
         return; //everyone's all in or one player left
     }
 
@@ -128,6 +129,11 @@ void BettingGame::run_betting_round(int first_betting_seat, int min_raise, int l
             last_bet = this_move.last_bet;
             min_raise = this_move.new_min_raise;
             last_to_raise_seat = to_play_seat; 
+        }
+
+        if (this_move.move_type==FOLD && last_to_raise_seat==to_play_seat)
+        {
+            last_to_raise_seat = player_utils::get_next_to_play(m_players,  to_play_seat);
         }
         
         // 5. Get Next Player

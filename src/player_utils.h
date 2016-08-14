@@ -14,6 +14,7 @@ int get_next_to_play(const std::vector<Player>& players, int seat);
 
 int count_active_players(const std::vector<Player>& players);
 int count_active_players_in_game(const std::vector<Player>& players);
+int count_not_all_in_active_players_in_game(const std::vector<Player>& players);
 
 int get_pot_value_for_round(const std::vector<Player>& players);
 int get_pot_value_for_game(const std::vector<Player>& players); 

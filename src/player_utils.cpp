@@ -37,6 +37,13 @@ int count_active_players_in_game(const std::vector<Player>& players)
                                                                                 p.m_in_play_this_round==true;});
 };
 
+int count_not_all_in_active_players_in_game(const std::vector<Player>& players)
+{
+    return std::count_if(players.cbegin(), players.cend(), [](const Player p){return p.m_in_play==true &&
+                                                                                p.m_in_play_this_round==true &&
+                                                                                p.m_all_in_this_round==false;});
+};
+
 // ONE LINERS -> see std::sum when you get internet again...
 int get_pot_value_for_round(const std::vector<Player>& players) 
 {
