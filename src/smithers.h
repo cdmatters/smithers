@@ -25,7 +25,7 @@ class Smithers{
         Smithers();
 
         void await_registered_players(int max_players, int max_chips );
-        void play_game();
+        void play_game(int min_raise);
         void play_tournament();
         
         void publish_to_all(const std::string& message);

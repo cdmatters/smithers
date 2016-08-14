@@ -136,13 +136,12 @@ void Smithers::publish_to_all(const Json::Value& json)
     publish_to_all(message.str());
 }
 
-void Smithers::play_game()
+void Smithers::play_game(int min_raise)
 {   
-    int min_raise = 500;
-
     m2pp::connection conn("ID", "tcp://127.0.0.1:9900", "tcp://127.0.0.1:9901"); //will have to move
     BettingGame betting_game(conn, m_publisher, m_players); 
     CardGame card_game;
+    
     int dealer_seat = player_utils::get_dealer(m_players);
     assign_seats(dealer_seat);
 
@@ -168,7 +167,6 @@ void Smithers::play_game()
     publish_to_all( create_results_message(results, m_players) );
 
     reset_and_move_dealer_to_next_player();
-
 }
 
 void Smithers::play_tournament()
@@ -183,9 +181,17 @@ void Smithers::play_tournament()
 
     } 
 
-    while ( player_utils::count_active_players(m_players) > 1 ){
-        play_game();
+    int min_raise = 100;
+    int hands_count = 0;
+    while ( player_utils::count_active_players(m_players) > 1 )
+    {
+        if (hands_count % 10 == 0 )
+        {
+            min_raise *= 2;
+        }
+        play_game(min_raise);
         player_utils::mark_broke_players(m_players);
+        hands_count++;
     }
 
     players_cit_t win_it = std::find_if( m_players.begin(), m_players.end(), [](const Player p){return p.m_chips>0;} );
