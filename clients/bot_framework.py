@@ -1,28 +1,33 @@
 import zmq 
 import requests
+import json
+import abc
+
 
 class PokerBotFramework(object):
     """ This class will handle all the mechanics for communicating 
     with the server. It will be inherited by any bots that wish to play
     with the server"""
+    __metaclass__ = abc.ABCMeta
 
     def __init__(self, server_url, listening_socket, name):
         self.server_url = server_url
         self.socket_url = listening_socket
         self.socket = None
+        self.context = None
         self.name = name 
 
         self.other_players = []
         self.OtherPlayerModel = object
-        
+
 
     def _connect_to_socket(self):
-        context = zmq.Context()
-        socket = context.socket(zmq.SUB)
+        self.context = zmq.Context()
+        self.socket = self.context.socket(zmq.SUB)
         
-        socket.connect(server_url)
-        socket.setsockopt(zmq.SUBSCRIBE, '')
-        self.socket = socket
+        self.socket.connect(self.socket_url)
+        self.socket.setsockopt(zmq.SUBSCRIBE, '')
+
 
     def get_message_from_socket(self):
         # TBD. loop and get a timeout
@@ -51,16 +56,20 @@ class PokerBotFramework(object):
         internal model of players'''
         pass
 
+    @abc.abstractmethod
+    def receive_move_message(self, name):
+        """What to be done when a move is received"""
+        return
 
-    def play():
-        _connect_to_socket()
+    def play(self):
+        self._connect_to_socket()
         while True:
-            msg = get_message_from_socket()
-            print msg
+            msg = self.get_message_from_socket()
+            self.receive_move_message(msg)
 
 
 if __name__== "__main__":
-    name = raw_input('Enter BOTNAME :')
+    name = raw_input('Enter RAW BOTNAME: ')
     pb = PokerBotFramework("http://localhost:6767","tcp://127.0.0.1:9950", name)
     pb.register()
     # pb.play()
