@@ -39,14 +39,28 @@ class PokerBotFramework(object):
         # loop over to check valid "types" in json
         return json_message
 
-    def _send_mesage_to_server(self, json_msg):
+    def _send_message_to_server(self, server_url, json_msg):
         # TBD. error checking 
-         r = requests.post(server_url, json_msg)
+        return requests.post(server_url, json=json_msg)
 
     def _process_players(self):
         '''Get notification of players and store in internal model, using
         internal model of players'''
         pass
+
+    def _build_move(self, move):
+        assert(self.is_valid_move(move))
+        return  {
+            "name":self.name,
+            "move":move[0],
+            "chips":int(move[1]),
+        }
+
+    def _send_move_to_server(self, move):
+        data = self._build_move(move)
+        url = self.server_url+"/move/"
+        self._send_message_to_server(url, data)
+
 
     def load_player_class(self, PlayerClass=object):
         self.OtherPlayerModel = PlayerClass
@@ -81,10 +95,16 @@ class PokerBotFramework(object):
         """What to be done when a move is received"""
         return
 
+    def is_valid_move(self, move):
+        return  (len(move)==2
+                 and move[0] in ["RAISE", "RAISE_TO", "CALL", "FOLD"]
+                 and move[1] >= 0)
+
     def register(self):
         data = { "name" : self.name }
         # TBD. check for errors
-        r = requests.post( self.server_url+'/register/', json=data )
+        url  = self.server_url+'/register/'
+        r = self._send_message_to_server(url, data)
         print r.json()
 
     def play(self):
@@ -106,7 +126,8 @@ class PokerBotFramework(object):
                 self.receive_results_message()
             elif m_type == "MOVE_REQUEST":
                 if msg.get("name", None) == self.name:
-                    self.on_move_request(msg["raise"], msg["call"])
+                    move = self.on_move_request(msg["raise"], msg["call"])
+                    self._send_move_to_server(move)
 
 
 

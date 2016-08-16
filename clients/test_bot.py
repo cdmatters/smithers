@@ -45,5 +45,5 @@ if __name__=="__main__":
     name = raw_input('Enter BOTNAME: ')
     pb = PokerBot("http://localhost:6767","tcp://127.0.0.1:9950", name)
     pb.register()
-    pb.isTest = True
+    # pb.isTest = True
     pb.play()
