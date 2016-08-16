@@ -18,6 +18,7 @@ def listener():
     while True:
         message = socket.recv()
         print message
+        raw_input()
 
 if __name__ == "__main__":
     listener()

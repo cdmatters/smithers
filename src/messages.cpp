@@ -73,7 +73,7 @@ Json::Value create_table_cards_message(const std::vector<Card>& cards, int pot)
     } 
 
     Json::Value root;
-    root["type"] = "DEALT_HANDS";
+    root["type"] = "DEALT_BOARD";
     root["pot"] = pot;
     root["cards"] = card_vector;
 
