@@ -6,7 +6,7 @@ import time
 import json
 import sys
 
-def listener():
+def listener(filtered):
     port = "9950"
     context = zmq.Context()
     socket = context.socket(zmq.SUB)
@@ -17,8 +17,11 @@ def listener():
     total_value = 0
     while True:
         message = socket.recv()
-        print message
-        raw_input()
+        json_message = json.loads(message);
+        if json_message["type"] not in filtered:
+            print message
+            raw_input()
 
 if __name__ == "__main__":
-    listener()
+    filtered = sys.argv[1:]
+    listener(filtered)
