@@ -28,6 +28,7 @@ class PokerBot(PokerBotFramework):
 
 
     def on_move_request(self, min_raise, call):
+        print "moved"
         moves = [
             ("RAISE_TO", min_raise),
             ("CALL", call),
