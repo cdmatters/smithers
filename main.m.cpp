@@ -29,7 +29,7 @@ int main(int argc, char *argv[])
 //    waylon_smithers.print_players();
 
     for (int i=0; i<3; i++){
-        waylon_smithers.play_tournament();
+        waylon_smithers.play_tournament(10000, 200, 20);
         std::cout<<"---"<<std::endl;
     }
 

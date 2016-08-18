@@ -26,7 +26,7 @@ class Smithers{
 
         void await_registered_players(int max_players, int max_chips );
         void play_game(int min_raise);
-        void play_tournament();
+        void play_tournament(int chips, int min_raise, int hands_before_blind_double);
         
         void publish_to_all(const std::string& message);
         void publish_to_all(const Json::Value& json);
@@ -34,8 +34,6 @@ class Smithers{
         void print_players();
 
         std::string create_new_game_message();
-
-        // Json::Value create_results_message(const std::vector<Result_t>& results);
 
     private:
 

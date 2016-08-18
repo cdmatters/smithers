@@ -11,21 +11,20 @@ namespace smithers{
 
 bool result_comparator(const Result_t& r1,const Result_t& r2 ){return r1.score>r2.score;}
 
-GameRunner::GameRunner(std::vector<Player>& players, zmq::socket_t& publisher)
-:m_players(players), m_publisher(publisher)
+GameRunner::GameRunner(std::vector<Player>& players, m2pp::connection& listener, zmq::socket_t& publisher)
+:m_players(players), m_listener(listener), m_publisher(publisher)
 {}
 
 
 void GameRunner::play_game(int min_raise)
 {   
-    m2pp::connection conn("ID", "tcp://127.0.0.1:9900", "tcp://127.0.0.1:9901"); //will have to move
-    BettingGame betting_game(conn, m_publisher, m_players); 
+    BettingGame betting_game(m_listener, m_publisher, m_players); 
     CardGame card_game;
     
     int dealer_seat = player_utils::get_dealer(m_players);
     assign_seats(dealer_seat);
 
-    std::vector<Hand> hands = card_game.deal_hands( m_players.size() ); 
+    std::vector<Hand> hands = card_game.deal_hands( player_utils::count_active_players(m_players) ); 
     
     betting_game.publish_to_all( create_dealt_hands_message( hands, m_players, dealer_seat ) );
 
