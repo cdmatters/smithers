@@ -103,9 +103,19 @@ void BettingGame::run_betting_round(int first_betting_seat, int min_raise, int l
         return; //everyone's all in or one player left
     }
 
-    int last_to_raise_seat = to_play_seat;
-    do 
+    int last_to_raise_seat = to_play_seat; // just to initialise
+    bool is_last_to_raise_set = false;
+    
+    while ((to_play_seat != last_to_raise_seat || !is_last_to_raise_set ) &&  // normal round of betting
+            player_utils::count_active_players_in_game(m_players) != 1) // everyone folded
     {   
+        // 0. Set last to raise, if unset.
+        if (!is_last_to_raise_set)
+        {
+            last_to_raise_seat = to_play_seat;
+            is_last_to_raise_set = true;
+        }
+
         // 1. Get (proper) Player 
         Player& next_player = m_players[to_play_seat];
         if (next_player.m_all_in_this_round)
@@ -132,15 +142,13 @@ void BettingGame::run_betting_round(int first_betting_seat, int min_raise, int l
         } //4.2 Has the first player folded?
         if (this_move.move_type==FOLD && last_to_raise_seat==to_play_seat)
         {
-            last_to_raise_seat = player_utils::get_next_to_play(m_players,  to_play_seat);
+            is_last_to_raise_set = false;
         }
         
         // 5. Get next player
         to_play_seat = player_utils::get_next_to_play(m_players,  to_play_seat);
     
-    } while (to_play_seat != last_to_raise_seat &&  // normal round of betting
-            player_utils::count_active_players_in_game(m_players) != 1); // everyone folded
-
+    } 
     end_round_betting(); 
 }
 
