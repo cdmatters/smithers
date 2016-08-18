@@ -2,9 +2,9 @@
 #define SMITHERS
 
 #include "player.h"
-#include "card_game.h"
-#include "betting_game.h"
 #include "messages.h"
+
+#include "hand_rank.h"
 
 #include <zmq.hpp>
 #include <json/json.h>
@@ -39,19 +39,17 @@ class Smithers{
 
     private:
 
-        void play_betting_round(int first_to_play, int min_raise, int last_bet);
         Json::Value listen_and_pull_from_queue(const std::string& player_name);
-        enum MoveType process_move(const Json::Value& move, Player&, int& min_raise, int& last_bet);
 
-        std::vector<Player> m_players;
 
         int assign_seats(int dealer_seat);
         void reset_and_move_dealer_to_next_player();
         int get_pot_value_for_game();
-        void transfer_round_bets_to_game_bets();
+
         std::vector<Result_t> award_winnings(const std::vector<ScoredFiveCardsPair_t>& scored_hands);
 
 
+        std::vector<Player> m_players;
         zmq::context_t m_zmq_context;
         zmq::socket_t m_publisher;
 
