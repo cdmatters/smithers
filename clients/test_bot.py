@@ -12,16 +12,24 @@ class PokerBot(PokerBotFramework):
     def play(self):
         super(PokerBot, self).play()
 
-
-
     def receive_players_message(self):
-        print "received list of players"
+        '''Triggered after all registered players are in, and after ordered dict 
+        of competitors is instantiated using the class set via:
+            - attribute  self.CompetitorModel  (= object by default)
+         or - method     self.load_player_class(competitorClass=object) 
+        These competitors are stored as a bot object attribute allowing for updating
+        of player model throughout the whole tournament
+            - self.competitors = {"PlayerName1":self.CompetitorModel()} etc...
+        '''
+        print self.CompetitorModel
+        print "received list of players: %s" % self.competitors
 
     def receive_move_message(self, player_name, move, amount, chips_left, is_blind):
         '''Triggered when a player's moved is published. 
                 - Includes own players move and blinds. 
                 - Arg `move` is in {"RAISE", "CALL", FOLD", "ALL_IN"}
-                args(self, str, str, int, int, bool) -> eg ("Player1", "RAISE", 1000, 9000, False)
+                args(self, str, str, int, int, bool) 
+                        -> eg ("Player1", "RAISE", 1000, 9000, False)
          '''
         print "received a move from another player: %s, move: %s, amount: %s, chips_left: %s, is a blind? %s" % (
                         player_name, move, amount, chips_left, is_blind)
@@ -48,7 +56,6 @@ class PokerBot(PokerBotFramework):
         for r in results_list:
             print "RESULTS: player: %s, winnings: %s, hand: %s" % (r[0], r[1], r[2])
 
-
     def on_move_request(self, min_raise, call, pot, current_bet, chips):
         '''Triggered on request for a move from the bot. 
                 - RETURN: tuple(move, chips)  
@@ -56,7 +63,6 @@ class PokerBot(PokerBotFramework):
                     `chips` is amount of chips betting
                 args(self, int, int, int, int, int)
         '''
-
         moves = [
             ("RAISE_TO", min_raise),
             ("CALL", call),
@@ -70,11 +76,10 @@ class PokerBot(PokerBotFramework):
         return move
 
 
-
 if __name__=="__main__":
     name = raw_input('Enter BOTNAME: ')
     tm = raw_input('Test_mode?: ')
     pb = PokerBot("http://localhost:6767","tcp://127.0.0.1:9950", name)
-    pb.register()
     pb.is_test = True if tm else False
+    pb.register()
     pb.play()

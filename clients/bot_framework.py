@@ -17,8 +17,8 @@ class PokerBotFramework(object):
         self.context = None
         self.name = name 
 
-        self.other_players = []
-        self.OtherPlayerModel = object
+        self.competitors = []
+        self.CompetitorModel = object
 
         self.hands_key = None
 
@@ -26,6 +26,7 @@ class PokerBotFramework(object):
         self.is_debug = False
 
         self._last_move = None
+        self._is_bust = False
 
 
     def _connect_to_socket(self):
@@ -114,7 +115,7 @@ class PokerBotFramework(object):
 
 
     def load_player_class(self, PlayerClass=object):
-        self.OtherPlayerModel = PlayerClass
+        self.CompetitorModel = PlayerClass
 
     @abc.abstractmethod
     def receive_players_message(self):
@@ -174,23 +175,29 @@ class PokerBotFramework(object):
                 if card_tuple is not None:
                     card1, card2 = card_tuple
                     self.receive_hands_message(card1, card2)
-                else:
+                elif not self._is_bust:
+                    self._is_bust = True
                     print "<bot_framework.py>: Warning - Gone Bust"
+
             elif m_type == "DEALT_BOARD":
                 board, pot = self._extract_board(msg)
                 self.receive_board_message(board, pot)
+
             elif m_type == "BLIND":
                 name, move, bet, chips_left = self._extract_move(msg)
                 self.receive_move_message(name, move, bet, chips_left, True)
+
             elif m_type == "MOVE":
                 name, move, bet, chips_left = self._extract_move(msg)
                 if name == self.name: # just sent in move. check it
                     self._verify_move(name, move, bet, chips_left, msg)
                 else:
                     self.receive_move_message(name, move, bet, chips_left, False)
+
             elif m_type == "RESULTS":
                 results_list = self._extract_results(msg)
                 self.receive_results_message(results_list)
+
             elif m_type == "MOVE_REQUEST":
                 if msg.get("name", None) == self.name:
                     if self.is_test:
@@ -199,6 +206,9 @@ class PokerBotFramework(object):
                     move = self.on_move_request(min_raise, call, pot, current_bet, chips)
                     self._send_move_to_server(move)
                     self._last_move = move
+
+            else:
+                pass
 
 
 
