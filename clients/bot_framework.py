@@ -24,6 +24,8 @@ class PokerBotFramework(object):
 
         self.is_test = False
 
+        self._last_move = None
+
 
     def _connect_to_socket(self):
         self.context = zmq.Context()
@@ -68,7 +70,17 @@ class PokerBotFramework(object):
         #TBD: dealer? blind? Other string info?
         return (card1, card2)
 
-        
+    def _extract_board(self, board_hands_msg):
+        return (board_hands_msg["cards"], board_hands_msg["pot"])
+
+    def _extract_move(self, move_msg):
+        return (move_msg["name"], move_msg["move"], move_msg["bet"],move_msg["chips"])
+
+    def _extract_results(self, results_msg):
+        players = results_msg["players"]
+        sorted_results =  sorted(players, key= lambda p:p["winnings"], reverse=True)
+        return [(p["name"], p["winnings"], p["hand"].split(" ")) for p in sorted_results]
+
 
     def _build_move(self, move):
         assert(self.is_valid_move(move))
@@ -83,6 +95,18 @@ class PokerBotFramework(object):
         url = self.server_url+"/move/"
         self._send_message_to_server(url, data)
 
+    def _verify_move(self, name, move, amount, chips_left, msg):
+        if (name != self.name or 
+            move != self._last_move[0] or 
+                (move != "FOLD" and
+                 amount != self._last_move[1])):
+            print "<bot_framework.py>: Warning - Discrepancy:"
+            print "<bot_framework.py>:     Sent %s " %(self._last_move,)
+            print "<bot_framework.py>:     Received Name: %s, Move: %s, Amount: %s" % (name, move, amount)
+            print "<bot_framework.py>:     Original Received: %s" % msg
+
+
+
 
     def load_player_class(self, PlayerClass=object):
         self.OtherPlayerModel = PlayerClass
@@ -93,7 +117,7 @@ class PokerBotFramework(object):
         return
 
     @abc.abstractmethod
-    def receive_move_message(self, player_name, move, amount, is_blind):
+    def receive_move_message(self, player_name, move, amount, chips_left, is_blind):
         """What to be done when a move is received"""
         return
 
@@ -136,25 +160,37 @@ class PokerBotFramework(object):
         self._connect_to_socket()
         while True:
             if self.is_test == True:
-                raw_input()
+                raw_input("*--------------------*")
             msg = self._get_message_from_socket()
             m_type = msg.get("type", None)
-            print msg
+            # print msg
             if m_type == "DEALT_HANDS":
-                card1, card2 = self._extract_hand(msg)
-                self.receive_hands_message(card1, card2)
+                card_tuple = self._extract_hand(msg)
+                if card_tuple is not None:
+                    card1, card2 = card_tuple
+                    self.receive_hands_message(card1, card2)
+                else:
+                    print "<bot_framework.py>: Warning - Gone Bust"
             elif m_type == "DEALT_BOARD":
-                self.receive_board_message(m_type)
+                board, pot = self._extract_board(msg)
+                self.receive_board_message(board, pot)
             elif m_type == "BLIND":
-                self.receive_move_message(True, True, True, True)
+                name, move, bet, chips_left = self._extract_move(msg)
+                self.receive_move_message(name, move, bet, chips_left, True)
             elif m_type == "MOVE":
-                self.receive_move_message(True, True, True, False)
+                name, move, bet, chips_left = self._extract_move(msg)
+                if name == self.name: # just sent in move. check it
+                    self._verify_move(name, move, bet, chips_left, msg)
+                else:
+                    self.receive_move_message(name, move, bet, chips_left, False)
             elif m_type == "RESULTS":
-                self.receive_results_message()
+                results_list = self._extract_results(msg)
+                self.receive_results_message(results_list)
             elif m_type == "MOVE_REQUEST":
                 if msg.get("name", None) == self.name:
                     move = self.on_move_request(msg["raise"], msg["call"])
                     self._send_move_to_server(move)
+                    self._last_move = move
 
 
 
