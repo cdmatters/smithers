@@ -23,6 +23,7 @@ class PokerBotFramework(object):
         self.hands_key = None
 
         self.is_test = False
+        self.is_debug = False
 
         self._last_move = None
 
@@ -163,7 +164,7 @@ class PokerBotFramework(object):
     def play(self):
         self._connect_to_socket()
         while True:
-            if self.is_test == True:
+            if self.is_debug == True:
                 raw_input("*--------------------*")
             msg = self._get_message_from_socket()
             m_type = msg.get("type", None)
@@ -192,6 +193,8 @@ class PokerBotFramework(object):
                 self.receive_results_message(results_list)
             elif m_type == "MOVE_REQUEST":
                 if msg.get("name", None) == self.name:
+                    if self.is_test:
+                        raw_input("move requested for %s" %self.name)
                     min_raise, call, pot, current_bet, chips = self._extract_move_request(msg)
                     move = self.on_move_request(min_raise, call, pot, current_bet, chips)
                     self._send_move_to_server(move)
@@ -205,6 +208,6 @@ if __name__== "__main__":
     name = raw_input('Enter RAW BOTNAME: ')
     pb = PokerBotFramework("http://localhost:6767","tcp://127.0.0.1:9950", name)
     pb.register()
-    pb.is_test = True
-    # pb.play()
+    # pb.is_debug = True
+    pb.play()
 
