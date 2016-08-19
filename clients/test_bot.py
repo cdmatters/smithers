@@ -14,13 +14,13 @@ class PokerBot(PokerBotFramework):
     def receive_players_message(self):
         print "received list of players"
 
-    def receive_move_message(self, is_blind):
+    def receive_move_message(self, player_name, move, amount, is_blind):
         print "received a move from another player"
 
-    def receive_hands_message(self):
-        print "received our hands"
+    def receive_hands_message(self, card1, card2):
+        print "received our hands:  %s, %s" % (card1, card2)
 
-    def receive_board_message(self):
+    def receive_board_message(self, board):
         print "received the board"
 
     def receive_results_message(self):
@@ -46,5 +46,5 @@ if __name__=="__main__":
     name = raw_input('Enter BOTNAME: ')
     pb = PokerBot("http://localhost:6767","tcp://127.0.0.1:9950", name)
     pb.register()
-    # pb.isTest = True
+    # pb.is_test = True
     pb.play()

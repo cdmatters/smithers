@@ -20,7 +20,9 @@ class PokerBotFramework(object):
         self.other_players = []
         self.OtherPlayerModel = object
 
-        self.isTest = False
+        self.hands_key = None
+
+        self.is_test = False
 
 
     def _connect_to_socket(self):
@@ -48,6 +50,26 @@ class PokerBotFramework(object):
         internal model of players'''
         pass
 
+    def _extract_hand(self, dealt_hands_msg):
+        players = dealt_hands_msg["players"]
+
+        is_broke = True
+        for p in players:
+            if p["name"] == self.name:
+                cards_string = p["hand"]
+                chips  = p["chips"]
+                is_broke = False
+
+        if is_broke:
+           return None
+
+        cards_list = [ s for s in cards_string.split("|") if s != ""]
+        card1, card2 = cards_list[0].split()
+        #TBD: dealer? blind? Other string info?
+        return (card1, card2)
+
+        
+
     def _build_move(self, move):
         assert(self.is_valid_move(move))
         return  {
@@ -71,17 +93,17 @@ class PokerBotFramework(object):
         return
 
     @abc.abstractmethod
-    def receive_move_message(self, is_blind):
+    def receive_move_message(self, player_name, move, amount, is_blind):
         """What to be done when a move is received"""
         return
 
     @abc.abstractmethod
-    def receive_hands_message(self):
+    def receive_hands_message(self, card1, card2):
         """What to be done when hands are received"""
         return
 
     @abc.abstractmethod
-    def receive_board_message(self):
+    def receive_board_message(self, board):
         """What to be done when the board is received"""
         return
 
@@ -105,23 +127,28 @@ class PokerBotFramework(object):
         # TBD. check for errors
         url  = self.server_url+'/register/'
         r = self._send_message_to_server(url, data)
+        r_json = r.json()
+        self._key = r_json["key"]
+        # TBD. check response. name == name; store chips?
         print r.json()
 
     def play(self):
         self._connect_to_socket()
         while True:
-            if self.isTest == True:
+            if self.is_test == True:
                 raw_input()
             msg = self._get_message_from_socket()
             m_type = msg.get("type", None)
+            print msg
             if m_type == "DEALT_HANDS":
-                self.receive_hands_message()
+                card1, card2 = self._extract_hand(msg)
+                self.receive_hands_message(card1, card2)
             elif m_type == "DEALT_BOARD":
-                self.receive_board_message()
+                self.receive_board_message(m_type)
             elif m_type == "BLIND":
-                self.receive_move_message(True)
+                self.receive_move_message(True, True, True, True)
             elif m_type == "MOVE":
-                self.receive_move_message(False)
+                self.receive_move_message(True, True, True, False)
             elif m_type == "RESULTS":
                 self.receive_results_message()
             elif m_type == "MOVE_REQUEST":
@@ -137,5 +164,6 @@ if __name__== "__main__":
     name = raw_input('Enter RAW BOTNAME: ')
     pb = PokerBotFramework("http://localhost:6767","tcp://127.0.0.1:9950", name)
     pb.register()
+    pb.is_test = True
     # pb.play()
 
