@@ -6,6 +6,9 @@ class PokerBot(PokerBotFramework):
     def __init__(self, server_url, listening_socket, name):
         super(PokerBot, self).__init__(server_url, listening_socket, name)
 
+    def register(self):
+        super(PokerBot, self).register()
+
     def play(self):
         super(PokerBot, self).play()
 
@@ -15,23 +18,45 @@ class PokerBot(PokerBotFramework):
         print "received list of players"
 
     def receive_move_message(self, player_name, move, amount, chips_left, is_blind):
-        print "received a move from another player"
-        print "MOVE:\tplayer: %s, move: %s, amount: %s, chips_left: %s, is a blind? %s" % (
+        '''Triggered when a player's moved is published. 
+                - Includes own players move and blinds. 
+                - Arg `move` is in {"RAISE", "CALL", FOLD", "ALL_IN"}
+                args(self, str, str, int, int, bool) -> eg ("Player1", "RAISE", 1000, 9000, False)
+         '''
+        print "received a move from another player: %s, move: %s, amount: %s, chips_left: %s, is a blind? %s" % (
                         player_name, move, amount, chips_left, is_blind)
 
     def receive_hands_message(self, card1, card2):
+        '''Triggered when a players hands are dealt out to the player
+                args(self, str, str) -> eg ("4S", "TD")
+        '''
         print "received our hands:  %s, %s" % (card1, card2)
 
     def receive_board_message(self, board, pot):
-        print "received the board: Board: %s  Pot: %s" %(board, pot)
+        '''Triggered when communal cards dealt out and published to player
+               args(self, list(str), int) -> eg (["5S", "KH", "JS"], 590) 
+        '''
+        print "received the board: Board: %s  Pot: %s" % (board, pot)
 
     def receive_results_message(self, results_list):
+        '''Triggered when results of the hand published to player
+               - Arg `result` is (player, winnings, hand).
+               - results_list is sorted win -> loser
+               args(self, list(result))
+        '''
         print "received the results of the hand:"
         for r in results_list:
-            print "\tplayer: %s, winnings: %s, hand: %s" % (r[0], r[1], r[2])
+            print "RESULTS: player: %s, winnings: %s, hand: %s" % (r[0], r[1], r[2])
 
 
-    def on_move_request(self, min_raise, call):
+    def on_move_request(self, min_raise, call, pot, current_bet, chips):
+        '''Triggered on request for a move from the bot. 
+                - RETURN: tuple(move, chips)  
+                    `move` in {"RAISE_TO", "CALL", "FOLD"} 
+                    `chips` is amount of chips betting
+                args(self, int, int, int, int, int)
+        '''
+
         moves = [
             ("RAISE_TO", min_raise),
             ("CALL", call),

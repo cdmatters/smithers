@@ -81,6 +81,10 @@ class PokerBotFramework(object):
         sorted_results =  sorted(players, key= lambda p:p["winnings"], reverse=True)
         return [(p["name"], p["winnings"], p["hand"].split(" ")) for p in sorted_results]
 
+    def _extract_move_request(self, move_request_msg):
+        return (move_request_msg["raise"], move_request_msg["call"],
+                move_request_msg["current_bet"], move_request_msg["chips"],
+                move_request_msg["raise"])
 
     def _build_move(self, move):
         assert(self.is_valid_move(move))
@@ -137,7 +141,7 @@ class PokerBotFramework(object):
         return
 
     @abc.abstractmethod
-    def on_move_request(self, min_raise, call):
+    def on_move_request(self, min_raise, call, pot, current_bet, chips):
         """What to be done when a move is received"""
         return
 
@@ -188,7 +192,8 @@ class PokerBotFramework(object):
                 self.receive_results_message(results_list)
             elif m_type == "MOVE_REQUEST":
                 if msg.get("name", None) == self.name:
-                    move = self.on_move_request(msg["raise"], msg["call"])
+                    min_raise, call, pot, current_bet, chips = self._extract_move_request(msg)
+                    move = self.on_move_request(min_raise, call, pot, current_bet, chips)
                     self._send_move_to_server(move)
                     self._last_move = move
 
