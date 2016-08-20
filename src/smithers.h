@@ -43,14 +43,16 @@ class Smithers{
         Json::Value listen_and_pull_from_queue(const std::string& player_name);
 
         std::vector<Player> m_players;
-        zmq::context_t m_zmq_context;
-        zmq::socket_t m_publisher;
 
-        m2pp::connection m_ws_publisher;
-        m2pp::connection m_http_listener;
+        m2pp::connection m_publistener;
 
         std::vector<std::string> m_pub_idents;
         std::string m_pub_key;
+
+        zmq::context_t m_zmq_context;
+        zmq::socket_t m_pub_socket;
+
+
 
 
     };

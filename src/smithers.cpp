@@ -56,15 +56,13 @@ namespace smithers{
 
 
 Smithers::Smithers():
+    m_publistener("PUBLIST", "tcp://127.0.0.1:9997", "tcp://127.0.0.1:9996"),
     m_zmq_context(1),
-    m_publisher(m_zmq_context, ZMQ_PUB),
-
-    m_ws_publisher("WSCKT_PUBL", "tcp://127.0.0.1:9999", "tcp://127.0.0.1:9998"),
-    m_http_listener("HTTP_LIST", "tcp://127.0.0.1:9997", "tcp://127.0.0.1:9996")
+    m_pub_socket(m_zmq_context, ZMQ_PUB)
 {
     m_pub_key = "54c6755b-9628-40a4-9a2d-cc82a816345e";
-
-    m_publisher.bind("tcp://127.0.0.1:9950");
+    
+    m_pub_socket.bind("tcp://127.0.0.1:9950");
 }
 
 
@@ -72,14 +70,14 @@ void Smithers::await_registered_players(int max_players, int max_chips)
 {
     std::cout << "await_registered_players().." << std::endl;
 
-    m2pp::connection& conn = m_http_listener;
+    m2pp::connection& conn = m_publistener;
     
     int seat = 1;
     while (true){
         m2pp::request req = conn.recv();
 
         if (req.disconnect) {
-            // std::cout << "== disconnect ==" << std::endl;
+            std::cout << "== disconnect ==" << req.path<<  std::endl;
             continue;
         }
 
@@ -119,7 +117,7 @@ void Smithers::await_registered_players(int max_players, int max_chips)
 
 void Smithers::await_registered_listeners(int max_listeners)
 {
-    m2pp::connection& conn_ws = m_http_listener;
+    m2pp::connection& conn_ws = m_publistener;
 
     int listeners = 0;
 
@@ -150,7 +148,7 @@ void Smithers::publish_to_all(const std::string& message)
 {
 
     zmq::message_t zmq_message(message.begin(), message.end());
-    m_publisher.send(zmq_message);
+    m_pub_socket.send(zmq_message);
 }
 
 void Smithers::publish_to_all(const Json::Value& json)
@@ -183,7 +181,7 @@ void Smithers::play_tournament(int chips, int min_raise, int hands_before_blind_
             min_raise *= 2;
         }
 
-        GameRunner game(m_players, m_http_listener, m_publisher, m_pub_idents, m_pub_key);
+        GameRunner game(m_players, m_publistener, m_pub_idents, m_pub_key, m_pub_socket);
         game.play_game(min_raise);
         
         player_utils::mark_broke_players(m_players);

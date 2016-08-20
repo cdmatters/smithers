@@ -23,8 +23,11 @@ typedef struct PlayerMove{
 
 class BettingGame{
     public:
-        BettingGame(m2pp::connection& listener, zmq::socket_t& publisher, std::vector<Player>& players, 
-                   const std::vector<std::string>& pub_ids, const std::string& pub_key);
+        BettingGame(std::vector<Player>& players, 
+                    m2pp::connection& pub_list_m2con,
+                    const std::vector<std::string>& pub_ids,
+                    const std::string& pub_key,
+                    zmq::socket_t& pub_socket); 
 
         void run_pocket_betting_round(int min_raise);
         void run_flop_betting_round(int min_raise);
@@ -50,10 +53,13 @@ class BettingGame{
 
         Json::Value listen_and_pull_from_queue(const std::string& player_name);
 
-        m2pp::connection& m_listener;
-        zmq::socket_t& m_publisher;
         std::vector<Player>& m_players;
+        
+        // ** sockets **
+        m2pp::connection& m_publist;
+        zmq::socket_t& m_pub_socket;
 
+        // ** delivery data **     
         const std::vector<std::string>& m_pub_ids;
         const std::string& m_pub_key;
 

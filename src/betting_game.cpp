@@ -81,11 +81,14 @@ PlayerMove_t process_a_fold_bet(int min_raise, int last_bet)
 } // close anon namespace
 
 
-BettingGame::BettingGame(m2pp::connection& listener, zmq::socket_t& publisher, std::vector<Player>& players, 
-    const std::vector<std::string>& pub_ids, const std::string& pub_key)
-    : m_listener(listener),
-    m_publisher(publisher),
-    m_players(players),
+BettingGame::BettingGame(std::vector<Player>& players,
+                        m2pp::connection& m2_conn,
+                        const std::vector<std::string>& pub_ids, 
+                        const std::string& pub_key,
+                        zmq::socket_t& pub_socket)
+    :m_players(players),
+    m_publist(m2_conn),
+    m_pub_socket(pub_socket),
     m_pub_ids(pub_ids),
     m_pub_key(pub_key)
 {
@@ -234,7 +237,7 @@ Json::Value BettingGame::listen_and_pull_from_queue(const std::string& player_na
     while (attempts < 400) // TIMEOUTS A PROBLEM IF LISTENER BLOCKS
     {
         std::cout << "pulling message from listener... WANT: "<< player_name << std::endl; 
-        m2pp::request req = m_listener.recv();
+        m2pp::request req = m_publist.recv();
 
         if (req.disconnect)
         {
@@ -248,7 +251,7 @@ Json::Value BettingGame::listen_and_pull_from_queue(const std::string& player_na
             Json::Reader reader;
             bool was_success = reader.parse(req.body, root);
             std::cout << req.body << std::endl;
-            m_listener.reply_http(req, "{}"); // should send back before the parse status
+            m_publist.reply_http(req, "{}"); // should send back before the parse status
             
             if  (!was_success || root.get("name", "").asString() != player_name)
             {
@@ -336,9 +339,11 @@ int BettingGame::get_pot_value() const
 void BettingGame::publish_to_all(const std::string& message)
 {
     zmq::message_t zmq_message(message.begin(), message.end());
-    m_publisher.send(zmq_message);
-    m_listener.deliver_websocket(m_pub_key, m_pub_ids, message);
-    
+    // send out message via websockets
+    m_publist.deliver_websocket(m_pub_key, m_pub_ids, message);
+    // send out message via raw socket locally
+    m_pub_socket.send(zmq_message);
+
 }
 
 void BettingGame::publish_to_all(const Json::Value& json)

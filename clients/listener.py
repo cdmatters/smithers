@@ -25,7 +25,7 @@ def listener(filtered):
         json_message = json.loads(message);
         if json_message.get("type", None) not in filtered:
             print message
-            raw_input()
+            # raw_input()
 
 if __name__ == "__main__":
     filtered = sys.argv[1:]

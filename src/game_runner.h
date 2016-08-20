@@ -15,8 +15,11 @@ namespace smithers{
 
 class GameRunner{
     public:
-        GameRunner(std::vector<Player>& players, m2pp::connection& listener, zmq::socket_t& publisher, 
-                  const std::vector<std::string>& pub_ids, const std::string& pub_key);
+        GameRunner(std::vector<Player>& players, 
+                    m2pp::connection& pub_list_m2con, 
+                    const std::vector<std::string>& pub_ids,
+                    const std::string& pub_key,
+                    zmq::socket_t& pub_socket);
 
         void play_game(int min_raise);
 
@@ -28,9 +31,12 @@ class GameRunner{
                
 
         std::vector<Player>& m_players;
-        m2pp::connection& m_listener;
-        zmq::socket_t& m_publisher;
 
+        // ** sockets **
+        m2pp::connection& m_publist;
+        zmq::socket_t& m_pub_socket;
+
+        // ** delivery data **
         const std::vector<std::string>& m_pub_ids;
         const std::string& m_pub_key;
 
