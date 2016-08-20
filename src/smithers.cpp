@@ -1,22 +1,15 @@
 #include "smithers.h"
 
 #include "player_utils.h"
-
 #include "game_runner.h"
 
-#include <zmq.hpp>
-#include <m2pp.hpp>
 #include <json/json.h>
-
 #include <iostream>
 #include <sstream>
 #include <random>
 #include <algorithm> 
 
-
 namespace {
-
-
 
 std::string gen_random_string(const size_t len)
 {
@@ -64,7 +57,10 @@ namespace smithers{
 
 Smithers::Smithers():
     m_zmq_context(1),
-    m_publisher(m_zmq_context, ZMQ_PUB)
+    m_publisher(m_zmq_context, ZMQ_PUB),
+
+    m_ws_publisher("WSCKT_PUBL", "tcp://127.0.0.1:9999", "tcp://127.0.0.1:9998"),
+    m_http_listener("HTTP_LIST", "tcp://127.0.0.1:9997", "tcp://127.0.0.1:9996")
 {
     m_publisher.bind("tcp://127.0.0.1:9950");
 }
@@ -74,7 +70,7 @@ void Smithers::await_registered_players(int max_players, int max_chips)
 {
     std::cout << "await_registered_players().." << std::endl;
 
-    m2pp::connection conn("UUID_1", "tcp://127.0.0.1:9997", "tcp://127.0.0.1:9996"); 
+    m2pp::connection& conn = m_http_listener;
     
     int seat = 1;
     while (true){
@@ -100,14 +96,11 @@ void Smithers::await_registered_players(int max_players, int max_chips)
         // TBD empty string or duplicates.
         std::string default_name =  "Player" + std::to_string(seat);
         std::string name = root.get("name", default_name).asString();
-        
-
 
         Player new_player( name, gen_random_string(100), seat, max_chips );
 
         std::ostringstream resp;
         resp << create_registered_message(new_player);
-
 
         conn.reply_http(req, resp.str());
         m_players.push_back(new_player);
@@ -122,47 +115,34 @@ void Smithers::await_registered_players(int max_players, int max_chips)
 
 }
 
-void Smithers::await_registered_spectators(int max_listeners)
+void Smithers::await_registered_listeners(int max_listeners)
 {
-    m2pp::connection conn_ws("WSCKS", "tcp://127.0.0.1:9999", "tcp://127.0.0.1:9998"); 
-    
-    int listeners = 1;
+    m2pp::connection& conn_ws = m_ws_publisher;
+    std::string handler_uuid = "54c6755b-9628-40a4-9a2d-cc82a816345e";
 
-    while (true){
+    int listeners = 0;
+
+    while (listeners<max_listeners){
         m2pp::request req = conn_ws.recv();
-
+        log_request(req);
         if (req.disconnect) {
             // std::cout << "== disconnect ==" << std::endl;
             continue;
         }
 
-        log_request(req);
         m_pub_idents.push_back(req.conn_id);
         
         std::stringstream handshake;
-        handshake << "HTTP/1.1 101 Switching Protocols" 
-           << "\r\nUpgrade: websocket" 
-           << "\r\nConnection: Upgrade"  
-           << "\r\nSec-WebSocket-Accept: " 
-           << req.body 
-           <<"\r\n\r\n";
+        handshake << "HTTP/1.1 101 Switching Protocols\r\n" 
+                  << "Upgrade: websocket\r\n" 
+                  << "Connection: Upgrade\r\n"  
+                  << "Sec-WebSocket-Accept: " << req.body << "\r\n"
+                  << "\r\n";
 
-        conn_ws.reply(req, handshake.str() );
-
-        std::stringstream idents;
-        for (size_t i=0; i<m_pub_idents.size(); i++ )
-        {
-            idents << " "<< m_pub_idents[i];
-        }
-        conn_ws.deliver_websocket("54c6755b-9628-40a4-9a2d-cc82a816345e", m_pub_idents, "{\"idents\":\""+idents.str()+"\" }");
-        if (listeners == max_listeners)
-        {
-            break;
-        }
-        listeners++;
+        conn_ws.reply(req, handshake.str());
+        conn_ws.deliver_websocket(handler_uuid, m_pub_idents, "{\"listeners\":\"ok\"}");
     }
 }
-
 
 void Smithers::publish_to_all(const std::string& message)
 {

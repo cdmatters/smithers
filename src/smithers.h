@@ -7,6 +7,8 @@
 #include "hand_rank.h"
 
 #include <zmq.hpp>
+#include <m2pp.hpp>
+
 #include <json/json.h>
 
 #include <string>
@@ -25,6 +27,8 @@ class Smithers{
         Smithers();
 
         void await_registered_players(int max_players, int max_chips );
+        void await_registered_listeners(int max_listeners);
+        
         void play_tournament(int chips, int min_raise, int hands_before_blind_double);
         
         void publish_to_all(const std::string& message);
@@ -32,7 +36,6 @@ class Smithers{
 
         void print_players();
 
-        void await_registered_spectators(int max_listeners);
 
 
     private:
@@ -44,6 +47,8 @@ class Smithers{
         zmq::socket_t m_publisher;
 
         std::vector<std::string> m_pub_idents;
+        m2pp::connection m_ws_publisher;
+        m2pp::connection m_http_listener;
 
 
 
