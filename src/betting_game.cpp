@@ -81,10 +81,13 @@ PlayerMove_t process_a_fold_bet(int min_raise, int last_bet)
 } // close anon namespace
 
 
-BettingGame::BettingGame(m2pp::connection& listener, zmq::socket_t& publisher, std::vector<Player>& players)
+BettingGame::BettingGame(m2pp::connection& listener, zmq::socket_t& publisher, std::vector<Player>& players, 
+    const std::vector<std::string>& pub_ids, const std::string& pub_key)
     : m_listener(listener),
     m_publisher(publisher),
-    m_players(players)
+    m_players(players),
+    m_pub_ids(pub_ids),
+    m_pub_key(pub_key)
 {
 }
 
@@ -334,6 +337,8 @@ void BettingGame::publish_to_all(const std::string& message)
 {
     zmq::message_t zmq_message(message.begin(), message.end());
     m_publisher.send(zmq_message);
+    m_listener.deliver_websocket(m_pub_key, m_pub_ids, message);
+    
 }
 
 void BettingGame::publish_to_all(const Json::Value& json)

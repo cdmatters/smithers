@@ -23,7 +23,8 @@ typedef struct PlayerMove{
 
 class BettingGame{
     public:
-        BettingGame(m2pp::connection& m_listener, zmq::socket_t& m_publisher, std::vector<Player>& m_players);
+        BettingGame(m2pp::connection& listener, zmq::socket_t& publisher, std::vector<Player>& players, 
+                   const std::vector<std::string>& pub_ids, const std::string& pub_key);
 
         void run_pocket_betting_round(int min_raise);
         void run_flop_betting_round(int min_raise);
@@ -52,6 +53,9 @@ class BettingGame{
         m2pp::connection& m_listener;
         zmq::socket_t& m_publisher;
         std::vector<Player>& m_players;
+
+        const std::vector<std::string>& m_pub_ids;
+        const std::string& m_pub_key;
 
 
 }; 

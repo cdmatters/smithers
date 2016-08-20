@@ -11,14 +11,14 @@ namespace smithers{
 
 bool result_comparator(const Result_t& r1,const Result_t& r2 ){return r1.score>r2.score;}
 
-GameRunner::GameRunner(std::vector<Player>& players, m2pp::connection& listener, zmq::socket_t& publisher)
-:m_players(players), m_listener(listener), m_publisher(publisher)
+GameRunner::GameRunner(std::vector<Player>& players, m2pp::connection& listener, zmq::socket_t& publisher, const std::vector<std::string>& pub_ids, const std::string& pub_key)
+:m_players(players), m_listener(listener), m_publisher(publisher), m_pub_ids(pub_ids), m_pub_key(pub_key)
 {}
 
 
 void GameRunner::play_game(int min_raise)
 {   
-    BettingGame betting_game(m_listener, m_publisher, m_players); 
+    BettingGame betting_game(m_listener, m_publisher, m_players, m_pub_ids, m_pub_key); 
     CardGame card_game;
     
     int dealer_seat = player_utils::get_dealer(m_players);

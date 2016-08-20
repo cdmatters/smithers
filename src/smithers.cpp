@@ -62,6 +62,8 @@ Smithers::Smithers():
     m_ws_publisher("WSCKT_PUBL", "tcp://127.0.0.1:9999", "tcp://127.0.0.1:9998"),
     m_http_listener("HTTP_LIST", "tcp://127.0.0.1:9997", "tcp://127.0.0.1:9996")
 {
+    m_pub_key = "54c6755b-9628-40a4-9a2d-cc82a816345e";
+
     m_publisher.bind("tcp://127.0.0.1:9950");
 }
 
@@ -117,8 +119,7 @@ void Smithers::await_registered_players(int max_players, int max_chips)
 
 void Smithers::await_registered_listeners(int max_listeners)
 {
-    m2pp::connection& conn_ws = m_ws_publisher;
-    std::string handler_uuid = "54c6755b-9628-40a4-9a2d-cc82a816345e";
+    m2pp::connection& conn_ws = m_http_listener;
 
     int listeners = 0;
 
@@ -140,7 +141,8 @@ void Smithers::await_registered_listeners(int max_listeners)
                   << "\r\n";
 
         conn_ws.reply(req, handshake.str());
-        conn_ws.deliver_websocket(handler_uuid, m_pub_idents, "{\"listeners\":\"ok\"}");
+        conn_ws.deliver_websocket(m_pub_key, m_pub_idents, "{\"listeners\":\"ok\"}");
+        listeners++;
     }
 }
 
@@ -163,7 +165,6 @@ void Smithers::publish_to_all(const Json::Value& json)
 
 void Smithers::play_tournament(int chips, int min_raise, int hands_before_blind_double)
 {
-    m2pp::connection conn("ID", "tcp://127.0.0.1:9900", "tcp://127.0.0.1:9901"); //will have to move
     for (size_t i=0; i<m_players.size(); i++)
     {
         m_players[i].m_in_play= true;
@@ -182,7 +183,7 @@ void Smithers::play_tournament(int chips, int min_raise, int hands_before_blind_
             min_raise *= 2;
         }
 
-        GameRunner game(m_players, conn, m_publisher);
+        GameRunner game(m_players, m_http_listener, m_publisher, m_pub_idents, m_pub_key);
         game.play_game(min_raise);
         
         player_utils::mark_broke_players(m_players);

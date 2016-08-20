@@ -46,10 +46,11 @@ class Smithers{
         zmq::context_t m_zmq_context;
         zmq::socket_t m_publisher;
 
-        std::vector<std::string> m_pub_idents;
         m2pp::connection m_ws_publisher;
         m2pp::connection m_http_listener;
 
+        std::vector<std::string> m_pub_idents;
+        std::string m_pub_key;
 
 
     };
