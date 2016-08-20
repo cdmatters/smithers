@@ -32,6 +32,9 @@ class Smithers{
 
         void print_players();
 
+        void await_registered_spectators(int max_listeners);
+
+
     private:
 
         Json::Value listen_and_pull_from_queue(const std::string& player_name);
@@ -39,6 +42,8 @@ class Smithers{
         std::vector<Player> m_players;
         zmq::context_t m_zmq_context;
         zmq::socket_t m_publisher;
+
+        std::vector<std::string> m_pub_idents;
 
 
 

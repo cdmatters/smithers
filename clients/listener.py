@@ -6,19 +6,24 @@ import time
 import json
 import sys
 
-def listener(filtered):
-    port = "9950"
-    context = zmq.Context()
-    socket = context.socket(zmq.SUB)
+from websocket import create_connection
 
-    socket.connect ("tcp://127.0.0.1:%s" % port)
-    socket.setsockopt(zmq.SUBSCRIBE, '')
+def listener(filtered):
+    # port = "9950"
+    # context = zmq.Context()
+    # socket = context.socket(zmq.SUB)
+
+    # socket.connect ("tcp://127.0.0.1:%s" % port)
+    # socket.setsockopt(zmq.SUBSCRIBE, '')
+
+    socket = create_connection("ws://localhost:6767/watch/")
 
     total_value = 0
     while True:
         message = socket.recv()
+        print message
         json_message = json.loads(message);
-        if json_message["type"] not in filtered:
+        if json_message.get("type", None) not in filtered:
             print message
             raw_input()
 

@@ -97,6 +97,7 @@ void Smithers::await_registered_players(int max_players, int max_chips)
             return;
         }
  
+        // TBD empty string or duplicates.
         std::string default_name =  "Player" + std::to_string(seat);
         std::string name = root.get("name", default_name).asString();
         
@@ -120,6 +121,48 @@ void Smithers::await_registered_players(int max_players, int max_chips)
     m_players[0].m_is_dealer = true;
 
 }
+
+void Smithers::await_registered_spectators(int max_listeners)
+{
+    m2pp::connection conn_ws("WSCKS", "tcp://127.0.0.1:9999", "tcp://127.0.0.1:9998"); 
+    
+    int listeners = 1;
+
+    while (true){
+        m2pp::request req = conn_ws.recv();
+
+        if (req.disconnect) {
+            // std::cout << "== disconnect ==" << std::endl;
+            continue;
+        }
+
+        log_request(req);
+        m_pub_idents.push_back(req.conn_id);
+        
+        std::stringstream handshake;
+        handshake << "HTTP/1.1 101 Switching Protocols" 
+           << "\r\nUpgrade: websocket" 
+           << "\r\nConnection: Upgrade"  
+           << "\r\nSec-WebSocket-Accept: " 
+           << req.body 
+           <<"\r\n\r\n";
+
+        conn_ws.reply(req, handshake.str() );
+
+        std::stringstream idents;
+        for (size_t i=0; i<m_pub_idents.size(); i++ )
+        {
+            idents << " "<< m_pub_idents[i];
+        }
+        conn_ws.deliver_websocket("54c6755b-9628-40a4-9a2d-cc82a816345e", m_pub_idents, "{\"idents\":\""+idents.str()+"\" }");
+        if (listeners == max_listeners)
+        {
+            break;
+        }
+        listeners++;
+    }
+}
+
 
 void Smithers::publish_to_all(const std::string& message)
 {
