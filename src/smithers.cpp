@@ -139,6 +139,7 @@ void Smithers::publish_to_all(const std::string& message)
 
     zmq::message_t zmq_message(message.begin(), message.end());
     m_pub_socket.send(zmq_message);
+    m_publistener.deliver_websocket(m_pub_key, m_pub_idents, message);
 }
 
 void Smithers::publish_to_all(const Json::Value& json)
@@ -153,6 +154,34 @@ void Smithers::publish_to_all(const Json::Value& json)
 
 void Smithers::play_tournament(int chips, int min_raise, int hands_before_blind_double)
 {
+    // allocate chips & tell people
+    reset_players_for_tournament(chips);
+    publish_to_all(create_tournament_start_message(m_players));
+
+    int hands_count = 0;
+    while ( player_utils::count_active_players(m_players) > 1 )
+    {
+        // check to raise min_raise
+        min_raise *= (hands_count % hands_before_blind_double == 0  && hands_count != 0)? 2 : 1;
+
+        // play a whole hand
+        GameRunner game(m_players, m_publistener, m_pub_idents, m_pub_key, m_pub_socket);
+        game.play_game(min_raise);
+        
+        // mark who goes bust & tell people
+        player_utils::mark_broke_players(m_players);
+        
+        hands_count++;
+    }
+
+    // find the winner & tell people
+    players_cit_t win_it = std::find_if( m_players.cbegin(), m_players.cend(), [](const Player p){return p.m_chips>0;} );
+    publish_to_all( create_tournament_winner_message( win_it->m_name, win_it->m_chips ) );
+
+}
+
+void Smithers::reset_players_for_tournament(int chips)
+{
     for (size_t i=0; i<m_players.size(); i++)
     {
         m_players[i].m_in_play= true;
@@ -162,27 +191,8 @@ void Smithers::play_tournament(int chips, int min_raise, int hands_before_blind_
         m_players[i].m_chips_this_round = 0;
 
     } 
-
-    int hands_count = 0;
-    while ( player_utils::count_active_players(m_players) > 1 )
-    {
-        if (hands_count % hands_before_blind_double == 0  && hands_count != 0)
-        {
-            min_raise *= 2;
-        }
-
-        GameRunner game(m_players, m_publistener, m_pub_idents, m_pub_key, m_pub_socket);
-        game.play_game(min_raise);
-        
-        player_utils::mark_broke_players(m_players);
-        
-        hands_count++;
-    }
-
-    players_cit_t win_it = std::find_if( m_players.begin(), m_players.end(), [](const Player p){return p.m_chips>0;} );
-    publish_to_all( create_tournament_winner_message( win_it->m_name, win_it->m_chips ) );
-
 }
+
 
 void Smithers::print_players()
 {

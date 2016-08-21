@@ -23,11 +23,10 @@ def listener(filtered, use_web_socket=True):
     total_value = 0
     while True:
         message = socket.recv()
-        print message
         json_message = json.loads(message);
         if json_message.get("type", None) not in filtered:
             print message
-            # raw_input()
+            raw_input()
 
 if __name__ == "__main__":
     filtered = sys.argv[1:]

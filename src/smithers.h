@@ -26,7 +26,7 @@ class Smithers{
     public:
         Smithers();
 
-        void await_registered_players(int max_players, int max_chips);
+        void await_registered_players(int max_players);
         
         void play_tournament(int chips, int min_raise, int hands_before_blind_double);
         
@@ -38,8 +38,11 @@ class Smithers{
 
 
     private:
+       void reset_players_for_tournament(int chips);
+
 
         Json::Value listen_and_pull_from_queue(const std::string& player_name);
+
 
         std::vector<Player> m_players;
 

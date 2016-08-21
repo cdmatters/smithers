@@ -3,6 +3,29 @@
 
 namespace smithers{
 
+Json::Value create_tournament_start_message(const std::vector<Player>& players)
+{
+    Json::Value root;
+    root["type"]="TOURNAMENT_START";
+
+    Json::Value players_json(Json::arrayValue);
+    for (size_t i=0; i<players.size(); ++i)
+    {
+        if (!players[i].m_in_play){
+            continue;
+        }
+        Json::Value player;
+        player["name"] = players[i].m_name;
+        player["chips"] = players[i].m_chips; 
+        // players[i].m_chips_this_round = players[i].m_chips_this_game = 0; so ignore.
+    
+        players_json.append(player);
+    }
+    root["players"] = players_json;
+
+    return root;
+}
+
 Json::Value create_registered_message( const Player& player )
 {
     Json::Value root;
