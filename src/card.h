@@ -20,8 +20,6 @@ Json::Value& operator<<(Json::Value& j_val, const Card& card);
 struct Hand{
     const Card card1;
     const Card card2;
-    bool in_play_at_end_of_round;
-    bool is_dealer;
 };
 std::ostream& operator<<(std::ostream& stream, const Hand& hand);
 Json::Value& operator<<(Json::Value& j_val, const Hand& hand);

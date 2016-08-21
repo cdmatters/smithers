@@ -13,9 +13,7 @@ std::ostream& operator<<(std::ostream& stream, const Card& card)
 
 std::ostream& operator<<(std::ostream& stream, const Hand& hand)
 {
-    stream << "|"  << hand.card1 << " " << hand.card2 << "|" 
-           << "p " << hand.in_play_at_end_of_round << "|"
-           << "d " << hand.is_dealer << "|";
+    stream << "|"  << hand.card1 << " " << hand.card2 << "|" ;
     return stream;
 }
 

@@ -28,7 +28,7 @@ const std::vector<Hand>& CardGame::deal_hands(int number_of_players )
     }
 
     for (int i=0; i<number_of_players; i++){
-        Hand this_hand = {all_cards[i], all_cards[i+number_of_players], true, false};
+        Hand this_hand = {all_cards[i], all_cards[i+number_of_players]};
         std::cout << this_hand << std::endl;
         m_hands.push_back(this_hand);
     }

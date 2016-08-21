@@ -1,5 +1,6 @@
 #include "messages.h"  
 
+#include <sstream>
 
 namespace smithers{
 
@@ -59,7 +60,10 @@ Json::Value create_dealt_hands_message(
         Json::Value player;
         player["name"] = players[deal_to_seat].m_name;
         player["chips"] = players[deal_to_seat].m_chips - players[deal_to_seat].m_chips_this_round - players[deal_to_seat].m_chips_this_game ;
-        player["hand"] << hands[hand_number];
+        std::stringstream h;
+        h << hands[hand_number];
+        h << std::to_string(players[deal_to_seat].m_is_dealer);
+        player["hand"] = h.str();
 
         players_json.append(player);
         hand_number++;
