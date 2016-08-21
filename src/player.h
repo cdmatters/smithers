@@ -5,7 +5,7 @@
 
 namespace smithers{
     struct Player{
-        Player(const std::string& name, const std::string& hash_key, int seat, int chips);
+        Player(const std::string& name, const std::string& hash_key, int seat);
         const std::string m_name;
         const std::string m_hash_key;
         int m_seat; 
@@ -20,11 +20,11 @@ namespace smithers{
 
 
 
-inline Player::Player(const std::string& name, const std::string& hash_key, const int seat, int chips):
+inline Player::Player(const std::string& name, const std::string& hash_key, const int seat):
     m_name(name), 
     m_hash_key(hash_key),
     m_seat(seat),
-    m_chips(chips),
+    m_chips(0),
     m_chips_this_game(0),
     m_chips_this_round(0),
     m_in_play(true),

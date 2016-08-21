@@ -66,7 +66,7 @@ Smithers::Smithers():
 }
 
 
-void Smithers::await_registered_players(int max_players, int max_chips)
+void Smithers::await_registered_players(int max_players)
 {
     std::cout << "await_registered_players().." << std::endl;
 
@@ -100,7 +100,7 @@ void Smithers::await_registered_players(int max_players, int max_chips)
             std::string default_name =  "Player" + std::to_string(seat);
             std::string name = root.get("name", default_name).asString();
 
-            Player new_player( name, gen_random_string(100), seat, max_chips );
+            Player new_player( name, gen_random_string(100), seat);
 
             std::ostringstream resp;
             resp << create_registered_message(new_player);
