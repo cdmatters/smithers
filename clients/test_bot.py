@@ -3,8 +3,8 @@ from bot_framework import PokerBotFramework
 import random
 
 class PokerBot(PokerBotFramework):
-    def __init__(self, server_url, listening_socket, name):
-        super(PokerBot, self).__init__(server_url, listening_socket, name)
+    def __init__(self, name, server_url, listening_socket=None ):
+        super(PokerBot, self).__init__( name, server_url, listening_socket)
 
     def register(self):
         super(PokerBot, self).register()
@@ -79,7 +79,7 @@ class PokerBot(PokerBotFramework):
 if __name__=="__main__":
     name = raw_input('Enter BOTNAME: ')
     tm = raw_input('Test_mode?: ')
-    pb = PokerBot("http://localhost:6767","tcp://127.0.0.1:9950", name)
+    pb = PokerBot(name, "http://localhost:6767") # "raw_socket_listener -> tcp://127.0.0.1:9950"
     pb.is_test = True if tm else False
     pb.register()
     pb.play()

@@ -27,7 +27,6 @@ class Smithers{
         Smithers();
 
         void await_registered_players(int max_players, int max_chips, int max_spectators );
-        void await_registered_listeners(int max_listeners);
         
         void play_tournament(int chips, int min_raise, int hands_before_blind_double);
         

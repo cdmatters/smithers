@@ -83,7 +83,7 @@ PlayerMove_t process_a_fold_bet(int min_raise, int last_bet)
 
 BettingGame::BettingGame(std::vector<Player>& players,
                         m2pp::connection& m2_conn,
-                        const std::vector<std::string>& pub_ids, 
+                        std::vector<std::string>& pub_ids, 
                         const std::string& pub_key,
                         zmq::socket_t& pub_socket)
     :m_players(players),
@@ -243,7 +243,20 @@ Json::Value BettingGame::listen_and_pull_from_queue(const std::string& player_na
         {
             continue;
         }
-        else
+        else if (req.path == "/watch/")
+        {
+            m_pub_ids.push_back(req.conn_id);
+        
+            std::stringstream handshake;
+            handshake << "HTTP/1.1 101 Switching Protocols\r\n" 
+                  << "Upgrade: websocket\r\n" 
+                  << "Connection: Upgrade\r\n"  
+                  << "Sec-WebSocket-Accept: " << req.body << "\r\n"
+                  << "\r\n";
+
+            m_publist.reply(req, handshake.str());
+        }
+        else if (req.path == "/move/")
         {
             std::cout << ++attempts <<": "<< req.body << std::endl;
 
@@ -259,6 +272,10 @@ Json::Value BettingGame::listen_and_pull_from_queue(const std::string& player_na
             }
 
             return root; 
+        }
+        else
+        {
+            std::cout << "WARNING Shouldn't get here: " << req.body << std::endl;
         }
 
     }

@@ -3,6 +3,7 @@ import requests
 import json
 import abc
 
+from websocket import create_connection
 
 class PokerBotFramework(object):
     """ This class will handle all the mechanics for communicating 
@@ -10,9 +11,9 @@ class PokerBotFramework(object):
     with the server"""
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, server_url, listening_socket, name):
+    def __init__(self, name, server_url, listening_socket=None):
         self.server_url = server_url
-        self.socket_url = listening_socket
+        self.raw_socket_url = listening_socket
         self.socket = None
         self.context = None
         self.name = name 
@@ -24,18 +25,23 @@ class PokerBotFramework(object):
 
         self.is_test = False
         self.is_debug = False
+        self.use_web_socket = (listening_socket is None)
 
         self._last_move = None
         self._is_bust = False
 
 
     def _connect_to_socket(self):
-        self.context = zmq.Context()
-        self.socket = self.context.socket(zmq.SUB)
-        
-        self.socket.connect(self.socket_url)
-        self.socket.setsockopt(zmq.SUBSCRIBE, '')
-
+        if self.use_web_socket:
+            ws_server_url = self.server_url.replace("http","ws",1) + "/watch/"
+            print ws_server_url
+            self.socket = create_connection(ws_server_url)
+        else:
+            self.context = zmq.Context()
+            self.socket = self.context.socket(zmq.SUB)
+            
+            self.socket.connect(self.raw_socket_url)
+            self.socket.setsockopt(zmq.SUBSCRIBE, '')
 
     def _get_message_from_socket(self):
         # TBD. loop and get a timeout

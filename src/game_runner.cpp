@@ -13,7 +13,7 @@ bool result_comparator(const Result_t& r1,const Result_t& r2 ){return r1.score>r
 
 GameRunner::GameRunner(std::vector<Player>& players, 
                         m2pp::connection& pub_list_m2con, 
-                        const std::vector<std::string>& pub_ids,
+                        std::vector<std::string>& pub_ids,
                         const std::string& pub_key,
                         zmq::socket_t& pub_socket)
 :m_players(players), m_publist(pub_list_m2con), m_pub_socket(pub_socket), m_pub_ids(pub_ids), m_pub_key(pub_key)

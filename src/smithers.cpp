@@ -73,9 +73,10 @@ void Smithers::await_registered_players(int max_players, int max_chips, int max_
     m2pp::connection& conn = m_publistener;
     int listeners = 0;
     int seat = 0;
-    while (seat < max_players || listeners < max_spectators)
+    while (seat < max_players || listeners < max_spectators + max_players)
     {
         m2pp::request req = conn.recv();
+
 
         if (req.disconnect) {
             std::cout << "== disconnect ==" << std::endl;
@@ -109,7 +110,7 @@ void Smithers::await_registered_players(int max_players, int max_chips, int max_
             m_players.push_back(new_player);
             seat++;
         }
-        else if (req.path == "/watch/" && listeners <  max_spectators )
+        else if (req.path == "/watch/" && listeners <  max_spectators + max_players )
         {
             m_pub_idents.push_back(req.conn_id);
         
@@ -128,40 +129,10 @@ void Smithers::await_registered_players(int max_players, int max_chips, int max_
         {
             continue;
         }
-
-
+        std::cout << "Players" << seat << "Subscribers" << listeners << std::endl;
     }
     m_players[0].m_is_dealer = true;
 
-}
-
-void Smithers::await_registered_listeners(int max_listeners)
-{
-    m2pp::connection& conn_ws = m_publistener;
-
-    int listeners = 0;
-
-    while (listeners<max_listeners){
-        m2pp::request req = conn_ws.recv();
-        log_request(req);
-        if (req.disconnect) {
-            // std::cout << "== disconnect ==" << std::endl;
-            continue;
-        }
-
-        m_pub_idents.push_back(req.conn_id);
-        
-        std::stringstream handshake;
-        handshake << "HTTP/1.1 101 Switching Protocols\r\n" 
-                  << "Upgrade: websocket\r\n" 
-                  << "Connection: Upgrade\r\n"  
-                  << "Sec-WebSocket-Accept: " << req.body << "\r\n"
-                  << "\r\n";
-
-        conn_ws.reply(req, handshake.str());
-        conn_ws.deliver_websocket(m_pub_key, m_pub_idents, "{\"listeners\":\"ok\"}");
-        listeners++;
-    }
 }
 
 void Smithers::publish_to_all(const std::string& message)

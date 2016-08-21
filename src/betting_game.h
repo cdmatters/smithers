@@ -25,7 +25,7 @@ class BettingGame{
     public:
         BettingGame(std::vector<Player>& players, 
                     m2pp::connection& pub_list_m2con,
-                    const std::vector<std::string>& pub_ids,
+                    std::vector<std::string>& pub_ids,
                     const std::string& pub_key,
                     zmq::socket_t& pub_socket); 
 
@@ -60,7 +60,7 @@ class BettingGame{
         zmq::socket_t& m_pub_socket;
 
         // ** delivery data **     
-        const std::vector<std::string>& m_pub_ids;
+        std::vector<std::string>& m_pub_ids;
         const std::string& m_pub_key;
 
 
