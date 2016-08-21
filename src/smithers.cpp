@@ -66,14 +66,14 @@ Smithers::Smithers():
 }
 
 
-void Smithers::await_registered_players(int max_players)
+void Smithers::await_registered_players(int max_seats, int min_listeners)
 {
     std::cout << "await_registered_players().." << std::endl;
 
     m2pp::connection& conn = m_publistener;
     int listeners = 0;
     int seat = 0;
-    while (seat < max_players)
+    while (seat < max_seats ||  listeners < min_listeners )
     {
         m2pp::request req = conn.recv();
 
@@ -84,7 +84,7 @@ void Smithers::await_registered_players(int max_players)
 
         // log_request(req);
 
-        if (req.path == "/register/" && seat < max_players)
+        if (req.path == "/register/" && seat < max_seats)
         {
             Json::Value root;
             Json::Reader reader;

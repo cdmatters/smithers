@@ -23,7 +23,7 @@ def make_bot_play(name):
         pb.play()
         return "WIN"
     except Exception as e:
-        print e
+        print name, " ", e
         print "DONE"
         return "NOPE"
         sys.exit(1)

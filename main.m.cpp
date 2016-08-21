@@ -24,7 +24,7 @@ int main(int argc, char *argv[])
     int raise_rate = std::stoi(argv[5]); 
 
     smithers::Smithers waylon_smithers;
-    waylon_smithers.await_registered_players(bots);
+    waylon_smithers.await_registered_players(bots, bots);
 
     std::string start_input;
     std::cout << "..continue?" << std::endl;
