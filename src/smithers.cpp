@@ -66,49 +66,69 @@ Smithers::Smithers():
 }
 
 
-void Smithers::await_registered_players(int max_players, int max_chips)
+void Smithers::await_registered_players(int max_players, int max_chips, int max_spectators)
 {
     std::cout << "await_registered_players().." << std::endl;
 
     m2pp::connection& conn = m_publistener;
-    
-    int seat = 1;
-    while (true){
+    int listeners = 0;
+    int seat = 0;
+    while (seat < max_players || listeners < max_spectators)
+    {
         m2pp::request req = conn.recv();
 
         if (req.disconnect) {
-            std::cout << "== disconnect ==" << req.path<<  std::endl;
+            std::cout << "== disconnect ==" << std::endl;
             continue;
         }
 
         log_request(req);
 
-        Json::Value root;
-        Json::Reader reader;
+        if (req.path == "/register/" && seat < max_players)
+        {
+            Json::Value root;
+            Json::Reader reader;
 
-        bool was_success = reader.parse( req.body, root );
-        if ( !was_success ){
-            std::cout  << "Failed to parse configuration\n"
-                       << reader.getFormattedErrorMessages();
-            return;
-        }
- 
-        // TBD empty string or duplicates.
-        std::string default_name =  "Player" + std::to_string(seat);
-        std::string name = root.get("name", default_name).asString();
+            bool was_success = reader.parse( req.body, root );
+            if ( !was_success ){
+                std::cout  << "Failed to parse configuration\n"
+                           << reader.getFormattedErrorMessages();
+                return;
+            }
+     
+            // TBD empty string or duplicates.
+            std::string default_name =  "Player" + std::to_string(seat);
+            std::string name = root.get("name", default_name).asString();
 
-        Player new_player( name, gen_random_string(100), seat, max_chips );
+            Player new_player( name, gen_random_string(100), seat, max_chips );
 
-        std::ostringstream resp;
-        resp << create_registered_message(new_player);
+            std::ostringstream resp;
+            resp << create_registered_message(new_player);
 
-        conn.reply_http(req, resp.str());
-        m_players.push_back(new_player);
-        if (seat < max_players){
+            conn.reply_http(req, resp.str());
+            m_players.push_back(new_player);
             seat++;
-        } else {
-            break;
         }
+        else if (req.path == "/watch/" && listeners <  max_spectators )
+        {
+            m_pub_idents.push_back(req.conn_id);
+        
+            std::stringstream handshake;
+            handshake << "HTTP/1.1 101 Switching Protocols\r\n" 
+                  << "Upgrade: websocket\r\n" 
+                  << "Connection: Upgrade\r\n"  
+                  << "Sec-WebSocket-Accept: " << req.body << "\r\n"
+                  << "\r\n";
+
+            conn.reply(req, handshake.str());
+            conn.deliver_websocket(m_pub_key, m_pub_idents, "{\"listeners\":\"ok\"}");
+            listeners++;
+        }
+        else
+        {
+            continue;
+        }
+
 
     }
     m_players[0].m_is_dealer = true;

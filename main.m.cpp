@@ -20,8 +20,8 @@ int main(int argc, char *argv[])
 
     smithers::Smithers waylon_smithers;
 
-    waylon_smithers.await_registered_players(3, 10000);
-    waylon_smithers.await_registered_listeners(2);
+    waylon_smithers.await_registered_players(3, 10000, 1);
+    // waylon_smithers.await_registered_listeners(1);
 
     std::string start_input;
     std::cout << "..continue?" << std::endl;
