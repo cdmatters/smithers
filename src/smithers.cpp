@@ -183,6 +183,7 @@ void Smithers::play_tournament(int chips, int min_raise, int hands_before_blind_
     players_cit_t win_it = std::find_if( m_players.cbegin(), m_players.cend(), [](const Player p){return p.m_chips>0;} );
     publish_to_all( create_tournament_winner_message( win_it->m_name, win_it->m_chips ) );
 
+    // refresh_players_ws(m_players.size());
 }
 
 void Smithers::mark_broke_players(std::vector<std::string>& broke_player_names)
@@ -210,6 +211,36 @@ void Smithers::reset_players_for_tournament(int chips)
     } 
 }
 
+void Smithers::refresh_players_ws(int players)
+{
+    m2pp::connection& conn = m_publistener;
+    
+    for (int i=0; i<players;)
+    {
+        m2pp::request req = conn.recv();
+
+        if (req.disconnect) {
+            // std::cout << "== disconnect ==" << std::endl;
+            continue;
+        }
+        std::cout<< "WIATING " << i << std::endl;
+        if (req.path == "/watch/")
+        {
+            m_pub_idents.push_back(req.conn_id);
+        
+            std::stringstream handshake;
+            handshake << "HTTP/1.1 101 Switching Protocols\r\n" 
+                  << "Upgrade: websocket\r\n" 
+                  << "Connection: Upgrade\r\n"  
+                  << "Sec-WebSocket-Accept: " << req.body << "\r\n"
+                  << "\r\n";
+
+            conn.reply(req, handshake.str());
+            // conn.deliver_websocket(m_pub_key, m_pub_idents, "{\"listeners\":\"ok\"}");
+            i++;
+        }
+    }
+}
 
 void Smithers::print_players()
 {
