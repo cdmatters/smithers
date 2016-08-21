@@ -35,7 +35,7 @@ class PokerBotFramework(object):
         if self.use_web_socket:
             ws_server_url = self.server_url.replace("http","ws",1) + "/watch/"
             print ws_server_url
-            self.socket = create_connection(ws_server_url)
+            self.socket = create_connection(ws_server_url, timeout=9999999)
         else:
             self.context = zmq.Context()
             self.socket = self.context.socket(zmq.SUB)

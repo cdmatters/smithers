@@ -20,8 +20,6 @@ int get_pot_value_for_round(const std::vector<Player>& players);
 int get_pot_value_for_game(const std::vector<Player>& players); 
 int get_all_chips_at_table(const std::vector<Player>& players);
 
-void mark_broke_players(std::vector<smithers::Player>& players);
-
 void transfer_round_bets_to_game_bets(std::vector<smithers::Player>& players); 
 }
 } // close smithers

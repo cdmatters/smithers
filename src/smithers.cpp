@@ -169,7 +169,12 @@ void Smithers::play_tournament(int chips, int min_raise, int hands_before_blind_
         game.play_game(min_raise);
         
         // mark who goes bust & tell people
-        player_utils::mark_broke_players(m_players);
+        std::vector<std::string> broke_players = {};
+        mark_broke_players(broke_players);
+        if (broke_players.size()>0)
+        {
+            publish_to_all(create_broke_message(broke_players));
+        }
         
         hands_count++;
     }
@@ -178,6 +183,18 @@ void Smithers::play_tournament(int chips, int min_raise, int hands_before_blind_
     players_cit_t win_it = std::find_if( m_players.cbegin(), m_players.cend(), [](const Player p){return p.m_chips>0;} );
     publish_to_all( create_tournament_winner_message( win_it->m_name, win_it->m_chips ) );
 
+}
+
+void Smithers::mark_broke_players(std::vector<std::string>& broke_player_names)
+{
+    for (size_t i=0; i<m_players.size(); i++)
+    {
+        if (m_players[i].m_chips<=0 && m_players[i].m_in_play == true)
+        {
+            m_players[i].m_in_play = false;
+            broke_player_names.push_back(m_players[i].m_name);
+        };
+    }
 }
 
 void Smithers::reset_players_for_tournament(int chips)

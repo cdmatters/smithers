@@ -46,6 +46,8 @@ namespace smithers{
     Json::Value create_results_message(const std::vector<Result_t>& results,
                                        const std::vector<Player>& players );
 
+    Json::Value create_broke_message(const std::vector<std::string>& broke_names);
+
 
 }
 

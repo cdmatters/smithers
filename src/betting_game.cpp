@@ -234,13 +234,14 @@ void BettingGame::end_round_betting()
 Json::Value BettingGame::listen_and_pull_from_queue(const std::string& player_name)
 {
     int attempts = 0 ;
-    while (attempts < 400) // TIMEOUTS A PROBLEM IF LISTENER BLOCKS
+    while (true) // TIMEOUTS A PROBLEM IF LISTENER BLOCKS
     {
         std::cout << "pulling message from listener... WANT: "<< player_name << std::endl; 
         m2pp::request req = m_publist.recv();
 
         if (req.disconnect)
         {
+            std::cout << "--disconnect--" << std::endl;
             continue;
         }
         else if (req.path == "/watch/")

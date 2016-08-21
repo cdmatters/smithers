@@ -76,16 +76,6 @@ int get_all_chips_at_table(const std::vector<Player>& players)
     return sum;
 };
 
-void mark_broke_players(std::vector<smithers::Player>& players)
-{
-    for (size_t i=0; i<players.size(); i++)
-    {
-        if (players[i].m_chips<=0)
-        {
-            players[i].m_in_play = false;
-        };
-    }
-};
 
 void transfer_round_bets_to_game_bets(std::vector<Player>& players)
 { 

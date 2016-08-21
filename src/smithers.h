@@ -39,6 +39,8 @@ class Smithers{
 
     private:
        void reset_players_for_tournament(int chips);
+       void mark_broke_players(std::vector<std::string>& broke_player_names);
+
 
 
         Json::Value listen_and_pull_from_queue(const std::string& player_name);

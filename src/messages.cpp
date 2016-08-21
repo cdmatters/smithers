@@ -171,4 +171,18 @@ Json::Value create_results_message(const std::vector<Result_t>& results, const s
 
 };
 
+Json::Value create_broke_message(const std::vector<std::string>& broke_names)
+{
+    Json::Value root;
+    root["type"] = "BROKE";
+    Json::Value players_json(Json::arrayValue);
+    for (size_t i = 0; i< broke_names.size(); i++)
+    {
+        players_json.append(broke_names[i]);
+    }
+    root["names"] = players_json;
+    return root;
+}
+
+
 }
