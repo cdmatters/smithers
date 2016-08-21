@@ -8,15 +8,17 @@ import sys
 
 from websocket import create_connection
 
-def listener(filtered):
-    # port = "9950"
-    # context = zmq.Context()
-    # socket = context.socket(zmq.SUB)
+def listener(filtered, use_web_socket=True):
+    
+    if use_web_socket:
+        socket = create_connection("ws://localhost:6767/watch/")
+    else:
+        context = zmq.Context()
+        socket = context.socket(zmq.SUB)
 
-    # socket.connect ("tcp://127.0.0.1:%s" % port)
-    # socket.setsockopt(zmq.SUBSCRIBE, '')
-
-    socket = create_connection("ws://localhost:6767/watch/")
+        port = "9950"
+        socket.connect ("tcp://127.0.0.1:%s" % port)
+        socket.setsockopt(zmq.SUBSCRIBE, '')
 
     total_value = 0
     while True:
