@@ -66,24 +66,23 @@ Smithers::Smithers():
 }
 
 
-void Smithers::await_registered_players(int max_players, int max_chips, int max_spectators)
+void Smithers::await_registered_players(int max_players, int max_chips)
 {
     std::cout << "await_registered_players().." << std::endl;
 
     m2pp::connection& conn = m_publistener;
     int listeners = 0;
     int seat = 0;
-    while (seat < max_players || listeners < max_spectators + max_players)
+    while (seat < max_players)
     {
         m2pp::request req = conn.recv();
 
-
         if (req.disconnect) {
-            std::cout << "== disconnect ==" << std::endl;
+            // std::cout << "== disconnect ==" << std::endl;
             continue;
         }
 
-        log_request(req);
+        // log_request(req);
 
         if (req.path == "/register/" && seat < max_players)
         {
@@ -110,7 +109,7 @@ void Smithers::await_registered_players(int max_players, int max_chips, int max_
             m_players.push_back(new_player);
             seat++;
         }
-        else if (req.path == "/watch/" && listeners <  max_spectators + max_players )
+        else if (req.path == "/watch/")
         {
             m_pub_idents.push_back(req.conn_id);
         
@@ -129,7 +128,7 @@ void Smithers::await_registered_players(int max_players, int max_chips, int max_
         {
             continue;
         }
-        std::cout << "Players" << seat << "Subscribers" << listeners << std::endl;
+        std::cout << "Players: " << seat << " WebSocket Listeners" << listeners << std::endl;
     }
     m_players[0].m_is_dealer = true;
 

@@ -77,7 +77,8 @@ class PokerBot(PokerBotFramework):
 
 
 if __name__=="__main__":
-    name = raw_input('Enter BOTNAME: ')
+    name = raw_input('Enter BOTNAME: ') 
+    #name = name if name else "randombot":
     tm = raw_input('Test_mode?: ')
     pb = PokerBot(name, "http://localhost:6767") # "raw_socket_listener -> tcp://127.0.0.1:9950"
     pb.is_test = True if tm else False
