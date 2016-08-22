@@ -248,6 +248,7 @@ Json::Value BettingGame::listen_and_pull_from_queue(const std::string& player_na
         }
         else if (req.path == "/watch/")
         {
+            std::cout << req.body << std::endl;
             if (std::find(m_pub_ids.begin(), m_pub_ids.end(), req.conn_id) != m_pub_ids.end() )
             {
                 continue;

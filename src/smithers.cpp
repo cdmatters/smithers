@@ -177,6 +177,7 @@ void Smithers::play_tournament(int chips, int min_raise, int hands_before_blind_
         }
         
         publish_to_all(create_ping_message());
+        collect_pongs();
 
         hands_count++;
     }
@@ -186,6 +187,23 @@ void Smithers::play_tournament(int chips, int min_raise, int hands_before_blind_
     publish_to_all( create_tournament_winner_message( win_it->m_name, win_it->m_chips ) );
 
     // refresh_players_ws(m_players.size());
+}
+
+void Smithers::collect_pongs()
+{
+    m2pp::connection& conn = m_publistener;
+    size_t pongs= 0;
+
+    while (pongs < m_pub_idents.size() )
+    {
+        m2pp::request req = conn.recv();
+        if (req.body=="PONG")
+        {
+            pongs++;
+        }
+
+
+    }
 }
 
 void Smithers::mark_broke_players(std::vector<std::string>& broke_player_names)

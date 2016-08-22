@@ -205,6 +205,7 @@ class PokerBotFramework(object):
                 self.receive_results_message(results_list)
 
             elif m_type == "PING":
+                print "PING ", self.name
                 self.socket.send("PONG")
 
             elif m_type == "MOVE_REQUEST":

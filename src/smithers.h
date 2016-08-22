@@ -42,6 +42,8 @@ class Smithers{
         void mark_broke_players(std::vector<std::string>& broke_player_names);
         void refresh_players_ws(int players);
 
+        void collect_pongs();
+
 
         Json::Value listen_and_pull_from_queue(const std::string& player_name);
 
