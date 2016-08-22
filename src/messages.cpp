@@ -184,5 +184,13 @@ Json::Value create_broke_message(const std::vector<std::string>& broke_names)
     return root;
 }
 
+Json::Value create_ping_message()
+{
+    Json::Value root;
+
+    root["type"] = "PING";
+    return root;
+}
+
 
 }

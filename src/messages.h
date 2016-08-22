@@ -48,6 +48,9 @@ namespace smithers{
 
     Json::Value create_broke_message(const std::vector<std::string>& broke_names);
 
+    Json::Value create_ping_message();
+
+
 
 }
 

@@ -2,6 +2,8 @@
 
 #include "player_utils.h"
 
+#include <algorithm>
+
 namespace smithers{
 
 namespace {
@@ -246,6 +248,10 @@ Json::Value BettingGame::listen_and_pull_from_queue(const std::string& player_na
         }
         else if (req.path == "/watch/")
         {
+            if (std::find(m_pub_ids.begin(), m_pub_ids.end(), req.conn_id) != m_pub_ids.end() )
+            {
+                continue;
+            }
             m_pub_ids.push_back(req.conn_id);
         
             std::stringstream handshake;

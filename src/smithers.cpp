@@ -176,6 +176,8 @@ void Smithers::play_tournament(int chips, int min_raise, int hands_before_blind_
             publish_to_all(create_broke_message(broke_players));
         }
         
+        publish_to_all(create_ping_message());
+
         hands_count++;
     }
 
@@ -223,7 +225,7 @@ void Smithers::refresh_players_ws(int players)
             // std::cout << "== disconnect ==" << std::endl;
             continue;
         }
-        std::cout<< "WIATING " << i << std::endl;
+        std::cout<< "WAITING " << i << std::endl;
         if (req.path == "/watch/")
         {
             m_pub_idents.push_back(req.conn_id);
