@@ -185,6 +185,7 @@ class PokerBotFramework(object):
         r = self._send_message_to_server(url, data)
         r_json = r.json()
         self._key = r_json["key"]
+        self.name = r_json["name"]
         # TBD. check response. name == name; store chips?
         print r.json()
 
