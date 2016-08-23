@@ -63,6 +63,16 @@ class PokerBot(PokerBotFramework):
         for r in results_list:
             print "RESULTS: player: %s, winnings: %s, hand: %s" % (r[0], r[1], r[2])
 
+    def receive_broke_message(self, names):
+        '''Triggered when a player(s) goes broke/bust.
+            args(list(str)) -> eg (["Player1", "Player2"])
+        '''
+        print "player(s): %s went bust" % ( ", ".join(names))
+
+    def receive_tournament_winner_message(self, name):
+        """Trigered when a player wins a winner-take-all tournament"""
+        print "player: %s won the tournament" % name
+
     def on_move_request(self, min_raise, call, pot, current_bet, chips):
         '''Triggered on request for a move from the bot. 
                 - RETURN: tuple(move, chips)  

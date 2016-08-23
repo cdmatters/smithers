@@ -95,6 +95,12 @@ class PokerBotFramework(object):
         return (move_request_msg["raise"], move_request_msg["call"],
                 move_request_msg["current_bet"], move_request_msg["chips"],
                 move_request_msg["raise"])
+    
+    def _extract_broke(self, broke_msg):
+        return broke_msg["names"]
+
+    def _extract_winner(self, winner_msg):
+        return winner_msg["name"]
 
     def _build_move(self, move):
         assert(self.is_valid_move(move))
@@ -150,6 +156,16 @@ class PokerBotFramework(object):
     @abc.abstractmethod
     def receive_results_message(self):
         """What to be done when the results are received"""
+        return
+
+    @abc.abstractmethod
+    def receive_broke_message(self, names):
+        """What to be done when a player goes broke"""
+        return
+
+    @abc.abstractmethod
+    def receive_tournament_winner_message(self, name):
+        """What to be done when the tournament winner is announced"""
         return
 
     @abc.abstractmethod
@@ -215,17 +231,14 @@ class PokerBotFramework(object):
                 self.receive_results_message(results_list)
 
             elif m_type == "BROKE":
-                pass
-                # broke = self._extract_broke(masg)
-                # self.receive_broke_message(broke)
+                broke = self._extract_broke(msg)
+                self.receive_broke_message(broke)
 
             elif m_type == "WINNER":
-                pass
-                # winner = self._extract_winner(masg)
-                # self.receive_tournament_winner_message(winner)
+                winner = self._extract_winner(msg)
+                self.receive_tournament_winner_message(winner)
 
             elif m_type == "PING":
-                print "PING ", self.name
                 self.socket.send("PONG")
 
             elif m_type == "MOVE_REQUEST":
