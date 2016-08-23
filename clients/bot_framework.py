@@ -196,11 +196,11 @@ class PokerBotFramework(object):
                 raw_input("*--------------------*")
             msg = self._get_message_from_socket()
             m_type = msg.get("type", None)
-            # print msg
+
             if m_type == "TOURNAMENT_START":
                 players = self._extract_tournament_start(msg)
                 if not self.competitors:
-                    self.set_up_competitors(players)
+                    self.set_up_competitors([p for p in players if p["name"] != self.name])
                 self.receive_tournament_start_message(players)
 
             elif m_type == "DEALT_HANDS":
@@ -252,6 +252,7 @@ class PokerBotFramework(object):
                     self._last_move = move
 
             elif m_type == "SHUTDOWN":
+                self.socket.close()
                 return
 
             else:
