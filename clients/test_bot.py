@@ -103,7 +103,7 @@ class PokerBot(PokerBotFramework):
 
 if __name__ == "__main__":
     import sys
-    name = sys.arv[1] if len(sys.argv) > 2 else ""
+    name = sys.argv[1] if len(sys.argv) >= 2 else ""
     # name = name if name else "randombot":
     # "raw_socket_listener -> tcp://127.0.0.1:9950"
     pb = PokerBot(name, "http://localhost:6767")

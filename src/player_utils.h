@@ -9,6 +9,8 @@
 namespace smithers {
 namespace player_utils{
 
+bool is_name_unique(const std::vector<Player>& players, const std::string& name);
+
 int get_dealer(const std::vector<Player>& players);
 int get_next_to_play(const std::vector<Player>& players, int seat);
 

@@ -1,6 +1,7 @@
  #include "player_utils.h"
 
 #include <iostream>
+#include <algorithm>
 
 namespace smithers{
 
@@ -86,6 +87,12 @@ void transfer_round_bets_to_game_bets(std::vector<Player>& players)
 
     }
 };
+
+bool is_name_unique(const std::vector<Player>& players, const std::string& name)
+{
+    return !std::any_of(players.cbegin(), players.cend(), [name](const Player& p){return p.m_name==name;});
+}
+
 
 
 

@@ -96,17 +96,23 @@ void Smithers::await_registered_players(int max_seats, int min_listeners)
                 return;
             }
      
-            // TBD empty string or duplicates.
+            // get a name if none
             std::string name = root.get("name", "").asString();
-
-            std::string default_name =  "PLAYER" + std::to_string(seat);
             if (name == "") // 
             {
-                name = default_name;
+                name = "PLAYER" + std::to_string(seat);
             }
-            // now check uniqueness and a number
+            // get a unique name
+            int u = 1;
+            std::string unique_name = name;
+            while (!player_utils::is_name_unique(m_players, unique_name))
+            {
+                unique_name = name + std::to_string(u);
+                u++;
+                std::cout << unique_name << std::endl;
+            }
 
-            Player new_player( name, gen_random_string(100), seat);
+            Player new_player( unique_name, gen_random_string(100), seat);
 
             std::ostringstream resp;
             resp << create_registered_message(new_player);
