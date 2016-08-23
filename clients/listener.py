@@ -24,9 +24,12 @@ def listener(filtered, use_web_socket=True):
     while True:
         message = socket.recv()
         json_message = json.loads(message);
+        if json_message.get("type", None) == "PING":
+            socket.send("PONG")
+
         if json_message.get("type", None) not in filtered:
             print message
-            raw_input()
+            #raw_input()
 
 if __name__ == "__main__":
     filtered = sys.argv[1:]

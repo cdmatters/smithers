@@ -204,6 +204,16 @@ class PokerBotFramework(object):
                 results_list = self._extract_results(msg)
                 self.receive_results_message(results_list)
 
+            elif m_type == "BROKE":
+                pass
+                # broke = self._extract_broke(masg)
+                # self.receive_broke_message(broke)
+
+            elif m_type == "WINNER":
+                pass
+                # winner = self._extract_winner(masg)
+                # self.receive_tournament_winner_message(winner)
+
             elif m_type == "PING":
                 print "PING ", self.name
                 self.socket.send("PONG")
@@ -216,6 +226,9 @@ class PokerBotFramework(object):
                     move = self.on_move_request(min_raise, call, pot, current_bet, chips)
                     self._send_move_to_server(move)
                     self._last_move = move
+
+            elif m_type == "SHUTDOWN":
+                return
 
             else:
                 pass
