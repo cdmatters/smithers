@@ -18,8 +18,8 @@ class PokerBotFramework(object):
         self.context = None
         self.name = name 
 
-        self.competitors = []
-        self.CompetitorModel = object
+        self.competitors = {}
+        self.CompetitorModel = dict
 
         self.hands_key = None
 
@@ -55,10 +55,12 @@ class PokerBotFramework(object):
         # TBD. error checking 
         return requests.post(server_url, json=json_msg)
 
-    def _process_players(self):
-        '''Get notification of players and store in internal model, using
-        internal model of players'''
-        pass
+
+
+        
+
+    def _extract_tournament_start(self, tournament_start_msg):
+        return tournament_start_msg["players"]
 
     def _extract_hand(self, dealt_hands_msg):
         players = dealt_hands_msg["players"]
@@ -117,14 +119,16 @@ class PokerBotFramework(object):
             print "<bot_framework.py>:     Received Name: %s, Move: %s, Amount: %s" % (name, move, amount)
             print "<bot_framework.py>:     Original Received: %s" % msg
 
-
-
-
     def load_player_class(self, PlayerClass=object):
         self.CompetitorModel = PlayerClass
 
     @abc.abstractmethod
-    def receive_players_message(self):
+    def set_up_competitors(self, players):
+        """Set up competitors in getting list of players for first tournament"""
+        pass 
+
+    @abc.abstractmethod
+    def receive_tournament_start_message(self, players):
         """What to be done when list of players is received"""
         return
 
@@ -176,7 +180,13 @@ class PokerBotFramework(object):
             msg = self._get_message_from_socket()
             m_type = msg.get("type", None)
             # print msg
-            if m_type == "DEALT_HANDS":
+            if m_type == "TOURNAMENT_START":
+                players = self._extract_tournament_start(msg)
+                if not self.competitors:
+                    self.set_up_competitors(players)
+                self.receive_tournament_start_message(players)
+
+            elif m_type == "DEALT_HANDS":
                 card_tuple = self._extract_hand(msg)
                 if card_tuple is not None:
                     card1, card2 = card_tuple

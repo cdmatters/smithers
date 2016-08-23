@@ -5,6 +5,8 @@ import random
 class PokerBot(PokerBotFramework):
     def __init__(self, name, server_url, listening_socket=None ):
         super(PokerBot, self).__init__( name, server_url, listening_socket)
+        self.competitors = []
+        self.CompetitorModel = dict
 
     def register(self):
         super(PokerBot, self).register()
@@ -12,7 +14,13 @@ class PokerBot(PokerBotFramework):
     def play(self):
         super(PokerBot, self).play()
 
-    def receive_players_message(self):
+    def set_up_competitors(self, players):
+        for p in players:
+            c = self.CompetitorModel(name=p["name"], chips=p["chips"])
+            self.competitors.append(c)
+
+
+    def receive_tournament_start_message(self, players):
         '''Triggered after all registered players are in, and after ordered dict 
         of competitors is instantiated using the class set via:
             - attribute  self.CompetitorModel  (= object by default)
@@ -21,8 +29,7 @@ class PokerBot(PokerBotFramework):
         of player model throughout the whole tournament
             - self.competitors = {"PlayerName1":self.CompetitorModel()} etc...
         '''
-        print self.CompetitorModel
-        print "received list of players: %s" % self.competitors
+        print "tournament starting: %s players: %s" % (len(players), ", ".join([p["name"] for p in players]))
 
     def receive_move_message(self, player_name, move, amount, chips_left, is_blind):
         '''Triggered when a player's moved is published. 
