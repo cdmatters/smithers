@@ -3,11 +3,13 @@ from bot_framework import PokerBotFramework
 import random
 from collections import OrderedDict
 
+
 class PokerBot(PokerBotFramework):
-    def __init__(self, name, server_url, listening_socket=None ):
-        super(PokerBot, self).__init__( name, server_url, listening_socket)
+
+    def __init__(self, name, server_url, listening_socket=None):
+        super(PokerBot, self).__init__(name, server_url, listening_socket)
         self.competitors = OrderedDict()
-        self.CompetitorModel = dict # insert your own class here
+        self.CompetitorModel = dict  # insert your own class here
 
     def register(self):
         super(PokerBot, self).register()
@@ -25,13 +27,13 @@ class PokerBot(PokerBotFramework):
             comp = self.CompetitorModel(name=c["name"], chips=c["chips"], seat=i)
             self.competitors[c["name"]] = comp
 
-
     def receive_tournament_start_message(self, players):
         '''Triggered on starting new tournament. Players are same format as received
         competitors, but self is included.
                 args(list(dict)) - dict.keys() = ["name", "chips"] 
         '''
-        print "tournament starting: %s players: %s" % (len(players), ", ".join([p["name"] for p in players]))
+        print "tournament starting: %s players: %s" % (
+                  len(players), ", ".join([p["name"] for p in players]))
 
     def receive_move_message(self, player_name, move, amount, chips_left, is_blind):
         '''Triggered when a player's moved is published. 
@@ -40,7 +42,9 @@ class PokerBot(PokerBotFramework):
                 - Does not includes own players move. Only blinds. 
                 - Arg `move` is in {"RAISE", "CALL", FOLD", "ALL_IN"}
         '''
-        print "received a move from another player: %s, move: %s, amount: %s, chips_left: %s, is a blind? %s" % (player_name, move, amount, chips_left, is_blind)
+        print "received a move from another " + \
+              "player: %s, move: %s, amount: %s, chips_left: %s, is a blind? %s" % (
+                  player_name, move, amount, chips_left, is_blind)
 
     def receive_hands_message(self, card1, card2):
         '''Triggered when a players hands are dealt out to the player
@@ -68,7 +72,7 @@ class PokerBot(PokerBotFramework):
         '''Triggered when a player(s) goes broke/bust.
                 args(list(str)) -> eg (["Player1", "Player2"])
         '''
-        print "player(s): %s went bust" % ( ", ".join(names))
+        print "player(s): %s went bust" % (", ".join(names))
 
     def receive_tournament_winner_message(self, name):
         '''Trigered when a player wins a winner-take-all tournament
@@ -97,11 +101,12 @@ class PokerBot(PokerBotFramework):
         return move
 
 
-if __name__=="__main__":
+if __name__ == "__main__":
     import sys
-    name = sys.arv[1] if len(sys.argv)>2 else ""
-    #name = name if name else "randombot":
-    pb = PokerBot(name, "http://localhost:6767") # "raw_socket_listener -> tcp://127.0.0.1:9950"
-    #pb.is_test = True 
+    name = sys.arv[1] if len(sys.argv) > 2 else ""
+    # name = name if name else "randombot":
+    # "raw_socket_listener -> tcp://127.0.0.1:9950"
+    pb = PokerBot(name, "http://localhost:6767")
+    #pb.is_test = True
     pb.register()
     pb.play()
