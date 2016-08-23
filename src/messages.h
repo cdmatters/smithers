@@ -50,6 +50,8 @@ namespace smithers{
 
     Json::Value create_ping_message();
 
+    Json::Value create_shutdown_message();
+
 
 
 }

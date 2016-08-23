@@ -237,6 +237,11 @@ void Smithers::reset_players_for_tournament(int chips)
     } 
 }
 
+void Smithers::shutdown()
+{
+    publish_to_all(create_shutdown_message());
+}
+
 void Smithers::refresh_players_ws(int players)
 {
     m2pp::connection& conn = m_publistener;

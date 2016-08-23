@@ -37,5 +37,7 @@ int main(int argc, char *argv[])
         std::cout<<"---"<<std::endl;
     }
 
+    waylon_smithers.shutdown();
+
     return 0;
 }

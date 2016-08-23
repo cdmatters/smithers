@@ -35,6 +35,8 @@ class Smithers{
 
         void print_players();
 
+        void shutdown();
+
 
 
     private:

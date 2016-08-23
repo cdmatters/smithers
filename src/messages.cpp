@@ -192,5 +192,13 @@ Json::Value create_ping_message()
     return root;
 }
 
+Json::Value create_shutdown_message()
+{
+    Json::Value root;
+
+    root["type"] = "SHUTDOWN";
+    return root;
+}
+
 
 }
