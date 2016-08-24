@@ -95,30 +95,41 @@ make all
 ####3. Run Smithers. Usage:
 
 ```
-    # sample ports. this needs to be cleared up. this works for the python test
-    ./smithers.tsk 'tcp://127.0.0.1:9999' 'tcp://127.0.0.1:9998'
+    # usage:  ./smithers.tsk  <p> <l> <t> <c> <m> <r>
+    #     where: p - player_bots, l - web socket listeners, t - tournaments
+                 c - chips, m - min raise, r - min raise doubles after r hands
+    eg: ./smithers.tsk 7 7 10 10000 200 20
 ```
 
 ##Setting up & Running a Test Poker Bot
-####1. Install Requirements
+####1. Install Python Requirements
 
 ```
-    pip install pyzmq
-    pip install # sort this out
+    cat requirements | xargs pip install
 ```
 
-####2. Run some bots (for now)
+####2. Run a single test bot
+The test bot is the minimal implementation based on the bot framework. If you're wanting to build a bot you're best off forking/cloning the smithers--client repo, or just copying test_bot.py and bot_framework.py and running from this
 
 ```
-    # this sets up a game of 3 bots, one always RAISES, one CALLS, one FOLDS,
-    python step_through_test.py 
+    python test_bot.py <name> # name of the bot
 ```
+
+####3. Run a whole suite of bots
+There are a couple of utility files in the clients repo that can be used to test the output of smithers
+- `python trial_game.py <int>` uses multiprocessing to set up `<int>` number of players to run in a tournament
+- `python listener.py <MESSAGE_TYPE>` will sign up as a listener and print the raw messages json from Smithers, filtering out messages with type=="MESSAGE_TYPE"  (eg 'MOVE' or 'MOVE_REQUEST')
 
 ##Playing Poker
 1. What does smithers do?
+    - Smithes deals cards out to you, and sends out a move request every time it needs a move from a player. If the player sends back something wrong ('raise' more than chips the bot has) Smithers corrects aiming to keep the game going (ie it will take that as 'all-in').
+    - The communication takes place largely over websockets, though historically it was via normal sockets and HTTP post requests.
+
 2. Where do the clients listen?
+    - Clients listen by connecting to the websocket address, with extra url '/watch/'. All the required communication (including manual pings & pongs) implemented in the bot + framework
+
 3. What messages does it send/receive
-Requests:
+    - Smithers and the bots communicate via json. The move types can be seen being constructed in messages.h/.cpp, or in the play segment of the bot framework. All you need to know is that every message has been faithfully passed on from the framework to the test_bot.py
 
 
 
