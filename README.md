@@ -1,18 +1,46 @@
 #Smithers
 ***Smithers is a poker server to help all your rich poker bots lose all their money together.***
 
+#Contents
+1. [What?](#what)
+2. [Tech](#technology)
+3. [Repo Structure](#repo-structure)
+4. [Installation](#installation)
+    + [Dependencies](#dependencies)
+    + [Quick Install](#quick-install)
+5. [Playing a Game](#playing-a-game)
+    + [Running Smithers](#running-smithers)
+    + [Running the Bots](#running-the-bots)
+6. [Future Work](#future-work)
 
-##Tech:
+
+##What?
+Smithers is a server that allows poker bots to play poker against one another, very quickly.  It is implemented in C++, partly as an exercise, partly as a learning opportunity in learning a low level stack, and partly because it's fast. 
+
+In terms of its structure Smithers is composed of a configuration for a mongrel2 server (which hooks up the http/websockets requests to ZeroMQ endpoints) and an executable which communicates with those endpoints and effectively runs the game.
+
+A game of poker is effectively run by having the bots listening on web sockets (or raw sockets), and being sent (publically) both: 1) other players actions and 2) the servers own request for an action to be taken by that same player. For example, the server will send a move request asking for a move from "BotA", and then publically send that move on to other players (after having processed it), before moving to "BotB". Some basic error checking is done, and on these cases Smithers always resolves errors by trying to keep the overall game going (ie if raise > chips -> all in). 
+
+A test bot is also provided to provide a sample skeleton of a working bot, in python. This relies on a class of BotFramework that handles all the communications plumbing for you. The framework then requires the implementation of basic callbacks in an inherited class (ie what to do if you receive a notification that another player has raised) before it can be instantiated. This is designed to be as simple as possible, and make the writing of poker bots as elegant as possible: at its very least, all you need to do is implement one function; and at most for a complex bot, you're fully covered with just nine.
+
+Anyone giving this more than a quick lookover will notice that its not very secure. It's not meant to be. Its run amongst friends who are not going to spoof each other, MITM each other or look at each others cards. An encryption mechanism may be on the cards (pardon the pun) in the future, but its not a high priority. If it is for you, see the "Future Work" section and submit a pull request! :)
+
+##Technology
 + implemented in c++ (for masochistic reasons)
-+ mongrel2 for server, mongrel2-cpp bindings used for cpp
-+ zeromq for interprocess communication
++ mongrel2 for server, mongrel2-cpp bindings used for cpp.
++ zeromq for interprocess communication with raw sockets. 
++ otherwise (mainly) use websockets & http post over websockets
++ messages are sent in json
 
-##Directory Structure:
-* **src** - smithers source code
-* **clients** - hosts some python implementations of a bare poker bot skeleton
+##Repo Structure
+* **src** - smithers executable source code
+* **clients** - python implementations of basic bot clients and python utils
+* **.** - configs and makefiles
 
-##Requirements & Set Up:
-Batteries not included. Follow instructions to get your batteries.
+##Installation
+This is a .cpp project so, natch, there aren't a lot of batteries included in the project and you'll have to install a few packages or libraries. The easiest way s to follow these instructions and build a working directory displayed at the bottom. This should allow the Makefile to find anything you need without installing anything permanent on your system.
+####Dependencies
+Smithers depends on the following packages
 ```
 DEPENDENCY GRAPH:
 Smithers
@@ -23,37 +51,38 @@ Smithers
     └── cppzmq 
 ```
 ----------
-####1. Install Mongrel2
-```
+####Quick Install
+1. Install Mongrel2 & Clone Dependencies
+
+    ``` 
+    # 1. Install mongrel2
     brew install mongrel2
-```
 
-####2. Get Json.Cpp & generate compact header + source
-```
+    # 2. Clone necessary repos
     git clone https://github.com/open-source-parsers/jsoncpp/ jsoncpp
-    cd jsoncpp && python amalgamate.py && cd ..  
-```
- 
-####3. Get ZeroMQ cpp bindings
-```
+
     git clone https://github.com/zeromq/cppzmq cppzmq
-```
 
-####4. Get Mongrel2 cpp bindings & build lib2mpp.a library
+    git clone https://github.com/condnsdmatters/mongrel2-cpp mongrel2-cpp
+    ```
 
-- *follow build instructions on repo's readme*
-- *alse requires the cppzmq header file: zmq.hpp* 
+2. Generate jsoncpp amalgamated header + source
+    ```
+    cd jsoncpp && python amalgamate.py && cd ..  
+    ```
 
-```
-   git clone https://github.com/condnsdmatters/mongrel2-cpp mongrel2-cpp
-   cd mongrel2-cpp
-   make all  # builds lib2mpp.a
-   cd ..
-```
+3. Build mongrel2cpp's  lib2mpp.a library
+    - *follow build instructions on repo's readme*
+    - *requires the header file: zmq.hpp from cppzmq above* 
 
-####5. Make dependencies available to Smithers
-- If you dont want to install all the above directories properly, Smithers will build with the following tree available in root.
-```
+    ```
+    cd mongrel2-cpp && make all && cd ..
+    ```
+
+4. Make dependencies available to Smithers
+    - If you dont want to install all the above directories properly, Smithers will build with the following tree available in root (dont forget to make the empty directories!)
+
+    ```
     ADD TO SMITHERS DIRECTORY (with where to find files)
     logs/
     run/
@@ -71,65 +100,62 @@ Smithers
     │   └── libm2pp.a    - - - - - - - - -> mongrel2-cpp/lib2mpp.a
     └── src
         └── jsoncpp.cpp  - - - - - - - - -> jsoncpp/dist/jsoncpp.cpp
-```
+    ```
 
+5. Build Smithers!
+    ```
+    make all
+    ```
 
-####6. Build Smithers!
-```
-make all
-```
-
-##Running Smithers
-####1. Generate the sqlite database that mongrel uses as its configuration
-
-```
+##Playing a Game
+#### Running Smithers
+1. Generate the sqlite database that mongrel uses as its configuration.
+    ```
     m2sh load -config pbb_mongrel.conf -db pbb_mongrel.sqlite   
-```
-
-####2. Run the server  
-
-```
-    m2sh start -host localhost
-```
-
-####3. Run Smithers. Usage:
-
-```
+    ```
+2. Run the server
+    ```
+    m2sh start -host localhost -db pbb_mongrel.sqlite 
+    # m2sh stop -host localhost
+    ```
+3. Run Smithers. 
+    ```
     # usage:  ./smithers.tsk  <p> <l> <t> <c> <m> <r>
     #     where: p - player_bots, l - web socket listeners, t - tournaments
                  c - chips, m - min raise, r - min raise doubles after r hands
     eg: ./smithers.tsk 7 7 10 10000 200 20
-```
+    ```
 
-##Setting up & Running a Test Poker Bot
-####1. Install Python Requirements
+#### Running the Bots
+1. Install Python Requirements (once only)
 
-```
+    ```
     cat requirements | xargs pip install
-```
+    ```
 
-####2. Run a single test bot
-The test bot is the minimal implementation based on the bot framework. If you're wanting to build a bot you're best off forking/cloning the smithers--client repo, or just copying test_bot.py and bot_framework.py and running from this
+2. Run a single test bot
+    - test_bot.py runs a bot that randomly "min raises", "calls" or "folds"
 
-```
+    ```
     python test_bot.py <name> # name of the bot
-```
+    ```
 
-####3. Run a whole suite of bots
-There are a couple of utility files in the clients repo that can be used to test the output of smithers
-- `python trial_game.py <int>` uses multiprocessing to set up `<int>` number of players to run in a tournament
-- `python listener.py <MESSAGE_TYPE>` will sign up as a listener and print the raw messages json from Smithers, filtering out messages with type=="MESSAGE_TYPE"  (eg 'MOVE' or 'MOVE_REQUEST')
+3. Run a whole suite of bots
+    - `python trial_game.py <int>` 
+        - uses multiprocessing to set up `<int>` number of players to run in a tournament in parallel
+    - `python listener.py <MESSAGE_TYPE>` 
+        - will sign up as a listener and print the raw messages json from Smithers, filtering out messages by message type
 
-##Playing Poker
-1. What does smithers do?
-    - Smithes deals cards out to you, and sends out a move request every time it needs a move from a player. If the player sends back something wrong ('raise' more than chips the bot has) Smithers corrects aiming to keep the game going (ie it will take that as 'all-in').
-    - The communication takes place largely over websockets, though historically it was via normal sockets and HTTP post requests.
+##Future Work
+- "OMG but the communication is so unsafe??!"
+- "Lol why would you use Mongrel2, X is so much better??!"
+- "EWww there are no timeouts - why arent the listeners running in a separate thread??!!"
+- "NOOB Wheres the error correction if the client disconnects??"
+- "Why havent you done... "..etc 
 
-2. Where do the clients listen?
-    - Clients listen by connecting to the websocket address, with extra url '/watch/'. All the required communication (including manual pings & pongs) implemented in the bot + framework
+If this sounds like you I'm thankful you've taken an interest in ameliorating my project, and I'm more than happy to look at pull requests for improvements... Thanks in advance!
 
-3. What messages does it send/receive
-    - Smithers and the bots communicate via json. The move types can be seen being constructed in messages.h/.cpp, or in the play segment of the bot framework. All you need to know is that every message has been faithfully passed on from the framework to the test_bot.py
+If this doesnt sound like you then thanks also for reading this far, and hopefully you'll enjoy using this software, and building your own poker bots (which after all, is where all the fun's at). Have a look at the smithers--client repo over the coming weeks to see the bots I come up with! Thanks! X
 
 
 
