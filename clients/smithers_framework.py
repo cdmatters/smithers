@@ -6,7 +6,7 @@ import abc
 from websocket import create_connection
 
 
-class PokerBotFramework(object):
+class BotFramework(object):
     """ This class will handle all the mechanics for communicating 
     with the server. It will be inherited by any bots that wish to play
     with the server"""

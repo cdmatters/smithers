@@ -1,10 +1,9 @@
-from bot_framework import PokerBotFramework
+from smithers_framework import BotFramework
 
 import random
 from collections import OrderedDict
 
-
-class PokerBot(PokerBotFramework):
+class PokerBot(BotFramework):
 
     def __init__(self, name, server_url, listening_socket=None):
         super(PokerBot, self).__init__(name, server_url, listening_socket)

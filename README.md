@@ -21,7 +21,7 @@ In terms of its structure Smithers is composed of a configuration for a mongrel2
 
 A game of poker is effectively run by having the bots listening on web sockets (or raw sockets), and being sent (publically) both: 1) other players actions and 2) the servers own request for an action to be taken by that same player. For example, the server will send a move request asking for a move from "BotA", and then publically send that move on to other players (after having processed it), before moving to "BotB". Some basic error checking is done, and on these cases Smithers always resolves errors by trying to keep the overall game going (ie if raise > chips -> all in). 
 
-A test bot is also provided to provide a sample skeleton of a working bot, in python. This relies on a class of BotFramework that handles all the communications plumbing for you. The framework then requires the implementation of basic callbacks in an inherited class (ie what to do if you receive a notification that another player has raised) before it can be instantiated. This is designed to be as simple as possible, and make the writing of poker bots as elegant as possible: at its very least, all you need to do is implement one function; and at most for a complex bot, you're fully covered with just nine.
+A test bot (`monty.py`) is also provided to provide a sample skeleton of a working bot, in python. This relies on a class of an inherited BotFramework that handles all the communications plumbing for you (`smithers-framework.py`). The framework requires the implementation of basic callbacks in an inherited class (ie what to do if you receive a notification that another player has raised) before it can be instantiated. This is designed to be as simple as possible, and make the writing of poker bots as elegant as possible: at its very least, all you need to do is implement one function; and at most for a complex bot, you're fully covered with just nine.
 
 Anyone giving this more than a quick lookover will notice that its not very secure. It's not meant to be. Its run amongst friends who are not going to spoof each other, MITM each other or look at each others cards. An encryption mechanism may be on the cards (pardon the pun) in the future, but its not a high priority. If it is for you, see the "Future Work" section and submit a pull request! :)
 
@@ -110,15 +110,20 @@ Smithers
 ##Playing a Game
 #### Running Smithers
 1. Generate the sqlite database that mongrel uses as its configuration.
+
     ```
     m2sh load -config pbb_mongrel.conf -db pbb_mongrel.sqlite   
     ```
+
 2. Run the server
+
     ```
     m2sh start -host localhost -db pbb_mongrel.sqlite 
     # m2sh stop -host localhost
     ```
+    
 3. Run Smithers. 
+
     ```
     # usage:  ./smithers.tsk  <p> <l> <t> <c> <m> <r>
     #     where: p - player_bots, l - web socket listeners, t - tournaments
@@ -134,16 +139,16 @@ Smithers
     ```
 
 2. Run a single test bot
-    - test_bot.py runs a bot that randomly "min raises", "calls" or "folds"
+    - monty.py runs a bot that randomly "min raises", "calls" or "folds"
 
     ```
-    python test_bot.py <name> # name of the bot
+    python monty.py <name> # name of the bot
     ```
 
-3. Run a whole suite of bots
-    - `python trial_game.py <int>` 
+3. Run a whole suite of bots, using the files in clients/utils from client directory.
+    - `python -m utils.trial_game <int>` 
         - uses multiprocessing to set up `<int>` number of players to run in a tournament in parallel
-    - `python listener.py <MESSAGE_TYPE>` 
+    - `python -m utils.listener <MESSAGE_TYPE>` 
         - will sign up as a listener and print the raw messages json from Smithers, filtering out messages by message type
 
 ##Future Work
@@ -155,7 +160,7 @@ Smithers
 
 If this sounds like you I'm thankful you've taken an interest in ameliorating my project, and I'm more than happy to look at pull requests for improvements... Thanks in advance!
 
-If this doesnt sound like you then thanks also for reading this far, and hopefully you'll enjoy using this software, and building your own poker bots (which after all, is where all the fun's at). Have a look at the smithers--client repo over the coming weeks to see the bots I come up with! Thanks! X
+If this doesnt sound like you then thanks also for reading this far, and hopefully you'll enjoy using this software, and building your own poker bots (which after all, is where all the fun's at). Have a look at the [smithers--monty](https://github.com/condnsdmatters/smithers--monty) repo over the coming weeks to see the bots I come up with! Thanks! X
 
 
 

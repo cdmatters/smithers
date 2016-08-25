@@ -1,4 +1,4 @@
-from test_bot import PokerBot
+from monty import PokerBot
 import sys
 from multiprocessing import Process, Pool
 
