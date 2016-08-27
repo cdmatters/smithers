@@ -91,8 +91,8 @@ class BotFramework(object):
 
     def _extract_move_request(self, move_request_msg):
         return (move_request_msg["raise"], move_request_msg["call"],
-                move_request_msg["current_bet"], move_request_msg["chips"],
-                move_request_msg["raise"])
+                move_request_msg["pot"], move_request_msg["current_bet"],
+                move_request_msg["chips"])
 
     def _extract_broke(self, broke_msg):
         return broke_msg["names"]
