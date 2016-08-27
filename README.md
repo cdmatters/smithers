@@ -19,11 +19,11 @@ Smithers is a server that allows poker bots to play poker against one another, v
 
 In terms of its structure Smithers is composed of a configuration for a mongrel2 server (which hooks up the http/websockets requests to ZeroMQ endpoints) and an executable which communicates with those endpoints and effectively runs the game.
 
-A game of poker is effectively run by having the bots listening on web sockets (or raw sockets), and being sent (publically) both: 1) other players actions and 2) the servers own request for an action to be taken by that same player. For example, the server will send a move request asking for a move from "BotA", and then publically send that move on to other players (after having processed it), before moving to "BotB". Some basic error checking is done, and on these cases Smithers always resolves errors by trying to keep the overall game going (ie if raise > chips -> all in). 
+A game of poker is effectively run by having the bots listening on web sockets (or raw sockets), and being sent (publicly) both: 1) other players actions and 2) the servers own request for an action to be taken by that same player. For example, the server will send a move request asking for a move from "BotA", and then publicly send that move on to other players (after having processed it), before moving to "BotB". Some basic error checking is done, and on these cases Smithers always resolves errors by trying to keep the overall game going (ie. if raise > chips -> all in). 
 
-A test bot (`monty.py`) is also provided to provide a sample skeleton of a working bot, in python. This relies on a class of an inherited BotFramework that handles all the communications plumbing for you (`smithers-framework.py`). The framework requires the implementation of basic callbacks in an inherited class (ie what to do if you receive a notification that another player has raised) before it can be instantiated. This is designed to be as simple as possible, and make the writing of poker bots as elegant as possible: at its very least, all you need to do is implement one function; and at most for a complex bot, you're fully covered with just nine.
+A test bot (`monty.py`) is also provided to provide a sample skeleton of a working bot, in python. This relies on a class of an inherited BotFramework that handles all the communications plumbing for you (`smithers-framework.py`). The framework requires the implementation of basic callbacks in an inherited class (ie. what to do if you receive a notification that another player has raised) before it can be instantiated. This is designed to be as simple as possible, and make the writing of poker bots as elegant as possible: at its very least, all you need to do is implement one function; and at most for a complex bot, you're fully covered with just nine.
 
-Anyone giving this more than a quick lookover will notice that its not very secure. It's not meant to be. Its run amongst friends who are not going to spoof each other, MITM each other or look at each others cards. An encryption mechanism may be on the cards (pardon the pun) in the future, but its not a high priority. If it is for you, see the "Future Work" section and submit a pull request! :)
+Anyone giving this more than a quick lookover will notice that it's not very secure. It's not meant to be. It's run amongst friends who are not going to spoof each other, MITM each other or look at each others cards. An encryption mechanism may be on the cards (pardon the pun) in the future, but it's not a high priority. If it is for you, see the "Future Work" section and submit a pull request! :)
 
 ##Technology
 + implemented in c++ (for masochistic reasons)
@@ -38,7 +38,7 @@ Anyone giving this more than a quick lookover will notice that its not very secu
 * **.** - configs and makefiles
 
 ##Installation
-This is a .cpp project so, natch, there aren't a lot of batteries included in the project and you'll have to install a few packages or libraries. The easiest way s to follow these instructions and build a working directory displayed at the bottom. This should allow the Makefile to find anything you need without installing anything permanent on your system.
+This is a .cpp project so, natch, there aren't a lot of batteries included in the project and you'll have to install a few packages or libraries. The easiest way to follow these instructions and build a working directory displayed at the bottom. This should allow the Makefile to find anything you need without installing anything permanent on your system.
 ####Dependencies
 Smithers depends on the following packages
 ```

@@ -2,7 +2,7 @@
 
 namespace smithers{
 
-const char Card::S[] = {"CDHS"};
+const char Card::S[] = {"cdhs"};
 const char Card::R[] = {"23456789TJQKA"};
 
 std::ostream& operator<<(std::ostream& stream, const Card& card)
