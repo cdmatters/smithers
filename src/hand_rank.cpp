@@ -75,6 +75,40 @@ int count_paired_cards(const FiveCards_t& cards )
     return count/2;
 }
 
+std::pair<int, int> get_paired_cards(const FiveCards_t& cards )
+{
+    std::vector<int> pairs = {};
+    int count=0;
+    for (int i=0; i<5; ++i)
+    {
+        if (2 == std::count_if(cards.cbegin(), cards.cend(), 
+                               std::bind(           
+                                    is_card_this_rank,
+                                    std::placeholders::_1,
+                                    cards[i].rank) ) )
+        {
+            pairs.push_back(cards[i].rank + 1);
+        }
+    }
+    std::sort(pairs.begin(), pairs.end());
+
+
+    std::pair<int, int> result = {0,0};
+
+    if (pairs.size() ==4)
+    {
+        result.first = pairs[0] ;
+        result.second = pairs[2];
+    }
+    else if (pairs.size() ==2)
+    {
+        result.first = pairs[0];
+         
+    }
+
+    return result; 
+}
+
 bool is_pair(const FiveCards_t& cards )
 {
      return count_paired_cards(cards) ==1;
@@ -110,6 +144,46 @@ bool is_three_of_kind(const FiveCards_t& cards )
                                     cards[2].rank 
                                     )
                                 ) ;
+}
+
+int get_three_of_kind(const FiveCards_t& cards )
+{
+    if (3 == std::count_if(cards.cbegin(),
+                                cards.cend(),
+                                std::bind(
+                                    is_card_this_rank,
+                                    std::placeholders::_1,
+                                    cards[0].rank )
+                                ))
+    {
+        return  cards[0].rank + 1;
+    } 
+    else if (3 == std::count_if(cards.cbegin(),
+                                cards.cend(),
+                                std::bind(
+                                    is_card_this_rank,
+                                    std::placeholders::_1, 
+                                    cards[1].rank 
+                                    )
+                                ))
+    {
+        return cards[1].rank + 1; 
+    }
+    else if (3 == std::count_if(cards.cbegin(),
+                                cards.cend(),
+                                std::bind(
+                                    is_card_this_rank,
+                                    std::placeholders::_1, 
+                                    cards[2].rank 
+                                    )
+                                ))
+    {
+        return cards[2].rank + 1;
+    }
+    else
+    {
+        return 0;
+    }
 }
 
 bool is_straight(const FiveCards_t& cards )
@@ -160,6 +234,34 @@ bool is_four_of_kind(const FiveCards_t& cards )
                                 ) ;
 }
 
+int get_four_of_kind(const FiveCards_t& cards )
+{
+    if ( 4 == std::count_if(cards.cbegin(),cards.cend(),
+                                std::bind(
+                                    is_card_this_rank,
+                                    std::placeholders::_1,
+                                    cards[0].rank ))
+        )
+    {
+        return cards[0].rank + 1;
+    } 
+    else if (4 == std::count_if(cards.cbegin(),cards.cend(),
+                                std::bind(
+                                    is_card_this_rank,
+                                    std::placeholders::_1, 
+                                    cards[1].rank ) )
+        )
+    {
+        return cards[1].rank + 1;
+    }
+    else
+    {
+        return 0;
+    }
+
+                                 
+}
+
 int pick_hand_type(const FiveCards_t& cards)
 {
     if (is_four_of_kind(cards))
@@ -180,6 +282,33 @@ int pick_hand_type(const FiveCards_t& cards)
         return 2;
     else
         return 1;
+}
+
+std::string score_five_cards(FiveCards_t& cards )
+{
+    const char to_hex[] = {"ABCDEFGHIJKLMN"};
+    
+    std::sort(cards.begin(), cards.end(), card_comparator);
+    
+    std::ostringstream rank;
+    for (size_t i=0; i<cards.size(); i++)
+    {
+        rank << to_hex[cards[i].rank];
+    }
+    std::pair<int, int> pairs = get_paired_cards(cards);
+    rank << to_hex[pairs.first] <<  to_hex[pairs.second];
+    rank << to_hex[get_three_of_kind(cards)];
+    rank << to_hex[is_straight(cards)];
+    rank << to_hex[is_flush(cards)];
+    rank << to_hex[is_full_house(cards)];
+    rank << to_hex[get_four_of_kind(cards)];
+    rank << to_hex[is_straight_flush(cards)];
+
+    rank << std::endl; 
+    std::string rank_str = rank.str();
+    std::reverse(rank_str.begin(), rank_str.end());
+
+    return  rank_str; // hex number
 }
 
 ScoredFiveCardsPair_t create_scored_pair(FiveCards_t& five)
@@ -214,23 +343,25 @@ ScoredFiveCardsPair_t rank_hand(const std::vector<Card>& table, const Hand& hand
 
 }
 
-int score_five_cards(FiveCards_t& cards )
-{
-    const char to_hex[] = {"0123456789ABCDEF"};
+// int score_five_cards(FiveCards_t& cards )
+// {
+//     const char to_hex[] = {"0123456789ABCDEF"};
     
-    std::sort(cards.begin(), cards.end(), card_comparator);
+//     std::sort(cards.begin(), cards.end(), card_comparator);
     
-    std::ostringstream rank;
-    for (size_t i=0; i<cards.size(); i++)
-    {
-        rank << to_hex[cards[i].rank];
-    }
-    rank << to_hex[pick_hand_type(cards)] << std::endl; 
-    std::string rank_str = rank.str();
-    std::reverse(rank_str.begin(), rank_str.end());
+//     std::ostringstream rank;
+//     for (size_t i=0; i<cards.size(); i++)
+//     {
+//         rank << to_hex[cards[i].rank];
+//     }
+//     rank << to_hex[pick_hand_type(cards)] << std::endl; 
+//     std::string rank_str = rank.str();
+//     std::reverse(rank_str.begin(), rank_str.end());
 
-    return  std::stoul(rank_str, NULL, 16); // hex number
-}
+//     return  std::stoul(rank_str, NULL, 16); // hex number
+// }
+
+
 
 
 

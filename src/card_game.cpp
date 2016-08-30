@@ -106,20 +106,29 @@ const Card CardGame::deal_a_card()
 
 std::vector<ScoredFiveCardsPair_t> CardGame::return_hand_scores()
 {
+    // std::vector<ScoredFiveCardsPair_t> print_this;
     std::vector<ScoredFiveCardsPair_t> hand_scores;
     for (size_t i=0; i<m_hands.size(); i++)
     {
         ScoredFiveCardsPair_t scored_hand = rank_hand(m_table, m_hands[i]);
         hand_scores.push_back(scored_hand);
-
-        std::cout << scored_hand.first << " ";
-        for (size_t j=0; j<5; j++){
-            std::cout << scored_hand.second[j]<<" ";
-        }
-        std::cout<<std::endl;
+        // print_this.push_back(scored_hand);
         
     }
+
+    // std::sort(print_this.begin(), print_this.end(),
+    //  [](ScoredFiveCardsPair_t a, ScoredFiveCardsPair_t b){return a.first>b.first;});
+    // for (size_t j=0; j<print_this.size(); j++)
+    // {
+    //     std::cout << print_this[j].first << " ";
+    //     for (size_t k=0; k<5; k++)
+    //     {
+    //         std::cout << print_this[j].second[k]<<" ";
+    //     }
+    //     std::cout<<std::endl;
+    // }
     return hand_scores;
+   
 }
 
 

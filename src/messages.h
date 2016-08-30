@@ -12,7 +12,7 @@
 namespace smithers{
 
     typedef struct r {
-            int score;
+            std::string score;
             std::string hand;
             size_t player_index;
             int winnings;
