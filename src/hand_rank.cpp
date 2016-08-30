@@ -78,7 +78,6 @@ int count_paired_cards(const FiveCards_t& cards )
 std::pair<int, int> get_paired_cards(const FiveCards_t& cards )
 {
     std::vector<int> pairs = {};
-    int count=0;
     for (int i=0; i<5; ++i)
     {
         if (2 == std::count_if(cards.cbegin(), cards.cend(), 

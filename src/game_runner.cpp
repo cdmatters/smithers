@@ -75,6 +75,11 @@ std::vector<Result_t> GameRunner::award_winnings(const std::vector<ScoredFiveCar
     for (size_t r=0; r<results.size(); r++)
     {
         Player& winner = m_players[results[r].player_index];
+        // need to do split pots here. divide winners bet by no of winners
+        
+        // int split_pot = std::count_if(results.begin(), results.end(), 
+            // [results, r](Result_t a){return a.score == results[r].score;});
+        // double winners_bet = winner.m_chips_this_game/split_pot;
         int winners_bet = winner.m_chips_this_game;
 
         for (size_t p=0; p<m_players.size(); p++){
