@@ -9,7 +9,9 @@
 
 namespace smithers{
 
-bool result_comparator(const Result_t& r1,const Result_t& r2 ){return r1.score>r2.score;}
+bool result_comparator(const Result_t& r1,const Result_t& r2 ){
+    return (r1.score!=r2.score)?r1.score>r2.score:r1.amount_bet<r2.amount_bet;
+}
 
 GameRunner::GameRunner(std::vector<Player>& players, 
                         m2pp::connection& pub_list_m2con, 
@@ -66,31 +68,44 @@ std::vector<Result_t> GameRunner::award_winnings(const std::vector<ScoredFiveCar
         int seat = m_players[i].m_seat;
         std::ostringstream cards;
         cards <<scored_hands[seat].second;
-        Result_t r = {scored_hands[seat].first,cards.str(), i, 0};
+        Result_t r = {scored_hands[seat].first,cards.str(), i, 0, m_players[i].m_chips_this_game};
         results.push_back(r);
     }
 
     std::sort(results.begin(), results.end(), result_comparator);
-
+    
+    int winnings = 0;
+    int s = 0;
     for (size_t r=0; r<results.size(); r++)
     {
         Player& winner = m_players[results[r].player_index];
         // need to do split pots here. divide winners bet by no of winners
         
-        // int split_pot = std::count_if(results.begin(), results.end(), 
-            // [results, r](Result_t a){return a.score == results[r].score;});
-        // double winners_bet = winner.m_chips_this_game/split_pot;
+        int split_pot = std::count_if(results.begin(), results.end(), 
+             [results, r](Result_t a){return a.score == results[r].score;});
         int winners_bet = winner.m_chips_this_game;
 
         for (size_t p=0; p<m_players.size(); p++){
             int amount = (m_players[p].m_chips_this_game >= winners_bet) ? 
                             winners_bet : m_players[p].m_chips_this_game;
-            results[r].winnings += amount;
+            winnings += amount;
             m_players[p].m_chips_this_game -= amount;
             m_players[p].m_chips -= amount;
         }
-        
+       
+        // handle multiple split pots with different amounts
+        results[r].winnings = (int) winnings/(split_pot-(s));
+        winnings -= (int) winnings/(split_pot-(s));
         winner.m_chips += results[r].winnings;
+
+        if ( split_pot == (s + 1))  
+        {
+            s = 0;
+        }
+        else
+        {
+            s++;
+        }
     }
         
     return results;

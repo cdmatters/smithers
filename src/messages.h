@@ -16,6 +16,7 @@ namespace smithers{
             std::string hand;
             size_t player_index;
             int winnings;
+            int amount_bet;
     } Result_t;
     
     enum MoveType {
