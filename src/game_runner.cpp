@@ -59,6 +59,7 @@ std::vector<Result_t> GameRunner::award_winnings(const std::vector<ScoredFiveCar
 {
     std::vector<Result_t> results;
 
+    // 1. Find people eligible to win & fill results vector
     for (size_t i=0; i<m_players.size(); i++){   
         
         if (!m_players[i].m_in_play || !m_players[i].m_in_play_this_round)
@@ -72,17 +73,16 @@ std::vector<Result_t> GameRunner::award_winnings(const std::vector<ScoredFiveCar
         results.push_back(r);
     }
 
+    //2. Sort by score (highest->lowest), then bet_amount (lowest-> highest)
     std::sort(results.begin(), results.end(), result_comparator);
     
     int winnings = 0;
     int s = 0;
     for (size_t r=0; r<results.size(); r++)
     {
+        //3. For each winner, subtract winnings from everyone elses chips
         Player& winner = m_players[results[r].player_index];
-        // need to do split pots here. divide winners bet by no of winners
         
-        int split_pot = std::count_if(results.begin(), results.end(), 
-             [results, r](Result_t a){return a.score == results[r].score;});
         int winners_bet = winner.m_chips_this_game;
 
         for (size_t p=0; p<m_players.size(); p++){
@@ -92,20 +92,25 @@ std::vector<Result_t> GameRunner::award_winnings(const std::vector<ScoredFiveCar
             m_players[p].m_chips_this_game -= amount;
             m_players[p].m_chips -= amount;
         }
+        
+        // 4. Count if split pot. If so, award a proportion to this 
+        // candidate, then put rest in 'winnings' variable, to be added
+        // to next time. 
+        //. eg. A, B, C win, D loses. Amounts bet (800,1000,1200,1200)
+        //.    A is eligible to win (800*4) = 3200
+        //.    Therefore awarded 3200//3, ; winnings = 3200*2/3
+        //. For B's turn, B claims (200*3); is awarded (3200*2/3 + 200*3)/2
+        //. For C's turn C claims (200*2) and all is gone; Is awarded (3200*2/3 + 200*3)/2 + 400 
+        int split_pot = std::count_if(results.begin(), results.end(), 
+             [results, r](Result_t a){return a.score == results[r].score;});
        
-        // handle multiple split pots with different amounts
         results[r].winnings = (int) winnings/(split_pot-(s));
         winnings -= (int) winnings/(split_pot-(s));
         winner.m_chips += results[r].winnings;
 
-        if ( split_pot == (s + 1))  
-        {
-            s = 0;
-        }
-        else
-        {
-            s++;
-        }
+        
+        s = (split_pot== s+1)? 0: s+1;
+
     }
         
     return results;
