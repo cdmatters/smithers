@@ -1,7 +1,7 @@
-#Smithers
+# Smithers
 ***Smithers is a poker server to help all your rich poker bots lose all their money together.***
 
-#Contents
+# Contents
 1. [What?](#what)
 2. [Tech](#technology)
 3. [Repo Structure](#repo-structure)
@@ -14,7 +14,7 @@
 6. [Future Work](#future-work)
 
 
-##What?
+## What?
 Smithers is a server that allows poker bots to play poker against one another, very quickly.  It is implemented in C++, partly as an exercise, partly as a learning opportunity in learning a low level stack, and partly because it's fast. 
 
 In terms of its structure Smithers is composed of a configuration for a mongrel2 server (which hooks up the http/websockets requests to ZeroMQ endpoints) and an executable which communicates with those endpoints and effectively runs the game.
@@ -25,21 +25,21 @@ A test bot (`monty.py`) is also provided to provide a sample skeleton of a worki
 
 Anyone giving this more than a quick lookover will notice that it's not very secure. It's not meant to be. It's run amongst friends who are not going to spoof each other, MITM each other or look at each others cards. An encryption mechanism may be on the cards (pardon the pun) in the future, but it's not a high priority. If it is for you, see the "Future Work" section and submit a pull request! :)
 
-##Technology
+## Technology
 + implemented in c++ (for masochistic reasons)
 + mongrel2 for server, mongrel2-cpp bindings used for cpp.
 + zeromq for interprocess communication with raw sockets. 
 + otherwise (mainly) use websockets & http post over websockets
 + messages are sent in json
 
-##Repo Structure
+## Repo Structure
 * **src** - smithers executable source code
 * **clients** - python implementations of basic bot clients and python utils
 * **.** - configs and makefiles
 
-##Installation
+## Installation
 This is a .cpp project so, natch, there aren't a lot of batteries included in the project and you'll have to install a few packages or libraries. The easiest way to follow these instructions and build a working directory displayed at the bottom. This should allow the Makefile to find anything you need without installing anything permanent on your system.
-####Dependencies
+#### Dependencies
 Smithers depends on the following packages
 ```
 DEPENDENCY GRAPH:
@@ -51,7 +51,7 @@ Smithers
     └── cppzmq 
 ```
 ----------
-####Quick Install
+#### Quick Install
 1. Install Mongrel2 & Clone Dependencies
 
     ``` 
@@ -107,7 +107,7 @@ Smithers
     make all
     ```
 
-##Playing a Game
+## Playing a Game
 #### Running Smithers
 1. Generate the sqlite database that mongrel uses as its configuration.
 
@@ -151,7 +151,7 @@ Smithers
     - `python -m utils.listener <MESSAGE_TYPE>` 
         - will sign up as a listener and print the raw messages json from Smithers, filtering out messages by message type
 
-##Future Work
+## Future Work
 - "OMG but the communication is so unsafe??!"
 - "Lol why would you use Mongrel2, X is so much better??!"
 - "EWww there are no timeouts - why arent the listeners running in a separate thread??!!"
