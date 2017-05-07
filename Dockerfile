@@ -66,10 +66,10 @@ ADD pbb_mongrel.conf /etc/mongrel2/pbb_mongrel.conf
 RUN chown -R www-data /etc/mongrel2
 
 # BELOW HERE JUST TESTING
-# ADD mongrel2-start /usr/sbin/mongrel2-start
-# RUN chmod 775 /usr/sbin/mongrel2-start
+ADD mongrel2-start /usr/sbin/mongrel2-start
+RUN chmod 775 /usr/sbin/mongrel2-start
 
 COPY clients clients/
-EXPOSE 9997 9996  6767  9950
-#ENTRYPOINT [ "mongrel2-start" ]
+EXPOSE 6767 9950 9997 9996
+ENTRYPOINT [ "mongrel2-start" ]
 CMD [ "/bin/bash" ]
