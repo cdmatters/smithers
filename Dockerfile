@@ -39,6 +39,7 @@ RUN curl -L https://github.com/condnsdmatters/mongrel2-cpp/archive/master.zip > 
     && unzip mongrel2-cpp.zip -d mongrel2-cpp \
     && cd mongrel2-cpp/mongrel2-cpp-master \
     && make all 
+RUN apt-get install -y python-pip
 
 # Build directory structure for Smithers
 RUN mkdir -p smithers/obj/ext \
@@ -71,5 +72,9 @@ RUN chmod 775 /usr/sbin/mongrel2-start
 
 COPY clients clients/
 EXPOSE 6767 9950 9997 9996
+
+# Give www-data user a shell
+RUN chsh -s /bin/bash www-data
+
 ENTRYPOINT [ "mongrel2-start" ]
 CMD [ "/bin/bash" ]

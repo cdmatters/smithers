@@ -1,0 +1,7 @@
+#!/bin/bash
+
+set -ex
+
+cd /etc/mongrel2
+su -c 'm2sh load -config pbb_mongrel.conf -db pbb_mongrel.sqlite' www-data
+su -c "m2sh start -host localhost -db pbb_mongrel.sqlite" www-data
