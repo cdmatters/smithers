@@ -39,7 +39,6 @@ RUN curl -L https://github.com/condnsdmatters/mongrel2-cpp/archive/master.zip > 
     && unzip mongrel2-cpp.zip -d mongrel2-cpp \
     && cd mongrel2-cpp/mongrel2-cpp-master \
     && make all 
-RUN apt-get install -y python-pip
 
 # Build directory structure for Smithers
 RUN mkdir -p smithers/obj/ext \

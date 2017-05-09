@@ -50,7 +50,12 @@ Smithers
     ├── json-c   # to be moved to jsoncpp
     └── cppzmq 
 ```
-----------
+---------
+#### Builing with Docker
+docker build -t smithers .
+docker run -p 6767:6767 --name smithers smithers
+docker exec -it smithers /bin/bash
+---------
 #### Quick Install
 1. Install Mongrel2 & Clone Dependencies
 
