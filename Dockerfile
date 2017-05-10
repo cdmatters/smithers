@@ -76,4 +76,4 @@ EXPOSE 6767 9950 9997 9996
 RUN chsh -s /bin/bash www-data
 
 ENTRYPOINT [ "mongrel2-start" ]
-CMD [ "/bin/bash" ]
+

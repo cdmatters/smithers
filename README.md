@@ -7,7 +7,8 @@
 3. [Repo Structure](#repo-structure)
 4. [Installation](#installation)
     + [Dependencies](#dependencies)
-    + [Quick Install](#quick-install)
+    + [Install with Docker](#docker)
+    + [Install Manually for OSX](#quick-install)
 5. [Playing a Game](#playing-a-game)
     + [Running Smithers](#running-smithers)
     + [Running the Bots](#running-the-bots)
@@ -38,7 +39,12 @@ Anyone giving this more than a quick lookover will notice that it's not very sec
 * **.** - configs and makefiles
 
 ## Installation
-This is a .cpp project so, natch, there aren't a lot of batteries included in the project and you'll have to install a few packages or libraries. The easiest way to follow these instructions and build a working directory displayed at the bottom. This should allow the Makefile to find anything you need without installing anything permanent on your system.
+
+The simplest way to get up and running with Smithers is use Docker to build and run your project, using it Ubuntu base image. You can also build manually.
+
+Caveat: This is a .cpp project so, natch, there aren't a lot of batteries included in the project and if you're not using Docker, you'll have to install a few packages or libraries. The easiest way to follow these instructions and build a working directory displayed at the bottom. This should allow the Makefile to find anything you need without installing anything permanent on your system.
+
+----------
 #### Dependencies
 Smithers depends on the following packages
 ```
@@ -50,13 +56,21 @@ Smithers
     ├── json-c   # to be moved to jsoncpp
     └── cppzmq 
 ```
+
 ---------
-#### Builing with Docker
+#### Building & Running with Docker
+
+Docker builds with an Ubuntu base image and runs both the mongrel2 server and smithers in the same container. It's super easy.
+```
+# 1. build docker
 docker build -t smithers .
-docker run -p 6767:6767 --name smithers smithers
-docker exec -it smithers /bin/bash
+
+# 2. run docker on port 6767. passing in args
+docker run -p 6767:6767 smithers [args...]
+```
+
 ---------
-#### Quick Install
+#### Building Manually for OSX
 1. Install Mongrel2 & Clone Dependencies
 
     ``` 
@@ -113,7 +127,9 @@ docker exec -it smithers /bin/bash
     ```
 
 ## Playing a Game
-#### Running Smithers
+#### Running Smithers (Manually)
+If you're not using Docker you just need to set up the mongrel server and run smithers.
+
 1. Generate the sqlite database that mongrel uses as its configuration.
 
     ```
@@ -124,7 +140,7 @@ docker exec -it smithers /bin/bash
 
     ```
     m2sh start -host localhost -db pbb_mongrel.sqlite 
-    # m2sh stop -host localhost
+    # m2sh stop -host localhost -db pbb_mongrel.sqlite
     ```
     
 3. Run Smithers. 
@@ -136,11 +152,11 @@ docker exec -it smithers /bin/bash
     eg: ./smithers.tsk 7 7 10 10000 200 20
     ```
 
-#### Running the Bots
-1. Install Python Requirements (once only)
+#### Running the Bots/Clients
+1. Install Python Requirements (once only) 
 
     ```
-    cat requirements | xargs pip install
+    pip install -r requirements.txt
     ```
 
 2. Run a single test bot
