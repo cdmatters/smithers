@@ -28,8 +28,10 @@ def listener(filtered, use_web_socket=True):
             socket.send("PONG")
 
         if json_message.get("type", None) not in filtered:
-            print message
+            print message, ","
             #raw_input()
+        if json_message.get("type", None) == "SHUTDOWN":
+            return 
 
 if __name__ == "__main__":
     filtered = sys.argv[1:]
