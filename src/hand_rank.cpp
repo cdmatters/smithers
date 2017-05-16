@@ -136,9 +136,17 @@ bool is_straight(const FiveCards_t& cards )
     FiveCards_t::const_iterator c = cards.cbegin() + 1;
     for (;c != cards.cend(); c++) //woo!
     {
-        if (c->rank != (c-1)->rank + 1)
+        if (c->rank != (c-1)->rank + 1) // cards are sorted: check succesive
         {
-            return false;
+            // edge case: 2,3,4,5,A 
+            bool is_2345A = (c + 1 == cards.cend() // last check
+                    && cards.cbegin()->rank == 0    // started with 2
+                    && c->rank == 12);              // ended with A
+            if (!is_2345A)
+            {
+                return false;
+            }
+
         }
     }
     return true;
